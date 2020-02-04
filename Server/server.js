@@ -1,6 +1,6 @@
 // Node package require statements
-var express = require("express");
-var http = require("http");
+const express = require("express");
+const http = require("http");
 
 // Port used to listen for connections 
 // If hosted on Heroku, the port is defined by the service
