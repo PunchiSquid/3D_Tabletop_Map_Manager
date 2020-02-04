@@ -1,0 +1,27 @@
+{
+  "name": "3d_tabletop_map_manager",
+  "version": "1.0.0",
+  "description": "A 3D map management tool for table-top role-playing games.",
+  "main": "Server/server.js",
+  "dependencies": {
+    "express": "^4.17.1"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node Server/server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ReeceStudent/3D_Tabletop_Map_Manager.git"
+  },
+  "author": "Reece Drage",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ReeceStudent/3D_Tabletop_Map_Manager/issues"
+  },
+  "homepage": "https://github.com/ReeceStudent/3D_Tabletop_Map_Manager#readme",
+  "engines": {
+    "node": "12.13.0"
+  }
+}
