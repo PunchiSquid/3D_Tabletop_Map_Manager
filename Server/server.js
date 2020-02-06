@@ -1,6 +1,7 @@
 // Node package require statements
 const express = require("express");
 const http = require("http");
+const MongoClient = require('mongodb').MongoClient;
 
 // Port used to listen for connections 
 // If hosted on Heroku, the port is defined by the service
@@ -16,7 +17,50 @@ server = http.createServer(app);
 // Default route
 app.get("/", function(request, response)
 {
-	response.send("Hello World");
+	// Set up connection variables
+	var client = new MongoClient(uri, { useNewUrlParser: true });
+	
+	// Connect to the MongoDB instance
+	client.connect().then(function(dbResponse)
+	{
+		// Retrieve database record
+		var dbObject = dbResponse.db("HelloWorld");
+		
+		try
+		{
+			// Create the "HelloWorld" collection
+			dbObject.createCollection("HelloWorld").then(function(res)
+			{
+				// Insert test record
+				dbObject.collection("HelloWorld").insertOne( {data: "Hello World"} ).then(function(res)
+				{
+					client.close();
+					response.send(res);	
+				})
+				.catch(function(err)
+				{
+					client.close();
+					response.send("Failed on insertion " + err);
+				});
+			})
+			.catch(function(err)
+			{
+				client.close();
+				response.send("Failed on creation " + err);
+			});
+		}
+		catch(err)
+		{
+			client.close();
+			response.send("Exception caught " + err);
+			
+		};
+	})
+	.catch(function(err)
+	{
+		client.close();
+		response.send("Failed on MongoDB connection " + err);
+	});
 });
 
 // Listen for connections
