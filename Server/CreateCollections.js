@@ -11,6 +11,7 @@ function CreateUserAccountCollection()
 			$jsonSchema:
 			{
 				required: ["username", "password", "emailAddress"],
+				additionalProperties: false,
 				properties:
 				{
 					username: 
