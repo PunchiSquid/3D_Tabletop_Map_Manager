@@ -21,6 +21,31 @@ server = http.createServer(app);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Route to authenticate a user record
+app.post("/login", function(request, response)
+{
+	// Retrieve request body and create a MongoDB connection
+	let body = request.body;	
+	let connection = new MongoConnection(uri);
+	
+	// Convert request body data into easily usable JSON
+	let inputData = 
+	{
+		username: body.username,
+		password: body.password,
+	}
+	
+	// Authenticate the record
+	connection.AuthenticateAccount(inputData).then(function(res)
+	{
+		response.send(res);
+	})
+	.catch(function(err)
+	{
+		response.send(err);
+	});
+});
+
 // Route to insert new user account record
 app.post("/user-accounts", function(request, response)
 {
