@@ -4,6 +4,7 @@
   "description": "A 3D map management tool for table-top role-playing games.",
   "main": "Server/server.js",
   "dependencies": {
+    "bcrypt": "^3.0.8",
     "express": "^4.17.1",
     "mongodb": "^3.5.2"
   },
