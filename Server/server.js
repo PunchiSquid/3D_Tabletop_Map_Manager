@@ -3,6 +3,9 @@ const express = require("express");
 const http = require("http");
 const MongoClient = require('mongodb').MongoClient;
 
+// Require custom node modules
+const MongoConnection = require('./databaseFunctions');
+
 // Port used to listen for connections 
 // If hosted on Heroku, the port is defined by the service
 // If hosted locally the port is 9000
@@ -14,8 +17,38 @@ app = express();
 // Create HTTP server.
 server = http.createServer(app);
 
-// Default route
-app.get("/", function(request, response)
+// Set up express to parse JSON data from a request body
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// Route to insert new user account record
+app.post("/user-accounts", function(request, response)
+{
+	// Retrieve request body and create a MongoDB connection
+	let body = request.body;	
+	let connection = new MongoConnection(uri);
+	
+	// Convert request body data into easily usable JSON
+	let inputData = 
+	{
+		username: body.username,
+		password: body.password,
+		emailAddress: body.emailAddress
+	}
+	
+	// Add the record
+	connection.AddUserAccount(inputData).then(function(res)
+	{
+		response.send(res);
+	})
+	.catch(function(err)
+	{
+		response.send(err);
+	});
+});
+
+// HelloWorld route
+app.get("/HelloWorld", function(request, response)
 {
 	// Set up connection variables
 	var client = new MongoClient(uri, { useNewUrlParser: true });
