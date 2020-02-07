@@ -107,4 +107,63 @@ module.exports = class MongoConnection
 			});	
 		});
 	}
+	
+	/*
+	* Authenticates an input user account against the database.
+	* @Param inputData The input user data to authenticate against the database.
+	*/
+	AuthenticateAccount(inputData)
+	{		
+		// Create a local variable for the URL. The Promise seems to be unable to access the properties of the class.
+		let promiseURL = this.url;
+		
+		// Create and return a new promise for a later retrieved value
+		return new Promise(function(resolve, reject)
+		{				
+			// Set up a DB event handler for connections
+			MongoClient.connect(promiseURL,{ useNewUrlParser: true, useUnifiedTopology: true }).then(function(dbResponse)
+			{
+				// The specific database to access
+				var dbObject = dbResponse.db("map_manager_db");
+				
+				// Create a query based on input parameters
+				let query = { username: inputData.username };
+				
+				// Finds and returns a single entry that matches the query
+				dbObject.collection("user_accounts").findOne(query).then(function(response)
+				{
+					if (response == null)
+					{
+						dbResponse.close();
+						resolve(false);
+						return;
+					}
+					
+					// Hash the input password before storing it in the database
+					bcrypt.compare(inputData.password, response.password).then(function(result)
+					{					
+						resolve(result);
+					})
+					.catch(function (error) 
+					{
+						dbResponse.close();
+						reject(error);
+						return;
+					});
+				})
+				.catch(function (error) 
+				{
+					// Close the connection and reject the promise and return the error
+					dbResponse.close();
+					reject(error);
+					return;
+				});
+			})
+			.catch(function(error)
+			{
+				reject(error);
+				return;
+			});	
+		});
+	}
 }
