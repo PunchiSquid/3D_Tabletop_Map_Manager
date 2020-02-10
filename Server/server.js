@@ -61,8 +61,15 @@ app.post("/login", function(request, response)
 	
 	// Authenticate the record
 	connection.AuthenticateAccount(inputData).then(function(res)
-	{
-		response.send(res);
+	{		
+		if (res == true)
+		{
+			response.redirect("/secure");
+		}
+		else
+		{
+			response.redirect(url.format({pathname: "/", query: {authfail: true}}));
+		}
 	})
 	.catch(function(err)
 	{
