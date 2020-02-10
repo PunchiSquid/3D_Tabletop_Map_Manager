@@ -1,6 +1,7 @@
 // Node package require statements
 const express = require("express");
 const http = require("http");
+const url = require("url");
 const MongoClient = require('mongodb').MongoClient;
 
 // Require custom node modules
@@ -20,6 +21,29 @@ server = http.createServer(app);
 // Set up express to parse JSON data from a request body
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Set up static routes
+app.use(express.static('../Client/Scripts/'));
+
+/***************/
+/* Page Routes */
+/***************/
+
+// Default route. Directs to a log-in page
+app.get("/", function(request, response)
+{
+	response.sendFile("/Client/login.html", {"root": __dirname + "/../"});
+});
+
+// Placeholder secure route
+app.get("/secure", function(request, response)
+{
+	response.send("Secure Page Accessed");
+});
+
+/**************/
+/* API Routes */
+/**************/
 
 // Route to authenticate a user record
 app.post("/login", function(request, response)
