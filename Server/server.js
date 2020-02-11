@@ -23,7 +23,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Set up static routes
-app.use(express.static('../Client/Scripts/'));
+app.use(express.static(__dirname + '/../Client/Scripts/'));
 
 /***************/
 /* Page Routes */
