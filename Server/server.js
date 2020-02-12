@@ -56,7 +56,33 @@ app.get("/register", function(request, response)
 // Placeholder secure route
 app.get("/secure", function(request, response)
 {
-	response.send("Secure Page Accessed");
+	if (request.map_session)
+	{
+		let connection = new MongoConnection(uri);
+		connection.GetUserAccountByUsername(request.map_session.username).then(function(res)
+		{
+			if (res)
+			{
+				response.sendFile("/Client/secure.html", {"root": __dirname + "/../"});
+			}
+			else
+			{
+				request.map_session.reset();
+				response.cookie("Alert", "Session invalid. Please log in.", {maxAge: 30000});
+				response.redirect("/");
+			}
+		})
+		.catch(function(err)
+		{
+			response.cookie("Alert", "Session invalid. Please log in.", {maxAge: 30000});
+			response.redirect("/");
+		});
+	}
+	else
+	{
+		response.cookie("Alert", "Session invalid. Please log in.", {maxAge: 30000});
+		response.redirect("/");
+	}
 });
 
 /**************/
@@ -82,6 +108,7 @@ app.post("/login", function(request, response)
 	{		
 		if (res == true)
 		{
+			request.map_session.username = request.body.username;
 			response.redirect("/secure");
 		}
 		else
