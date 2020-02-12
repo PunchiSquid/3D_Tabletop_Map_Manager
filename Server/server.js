@@ -1,7 +1,7 @@
 // Node package require statements
 const express = require("express");
+const cookieParser = require('cookie-parser');
 const http = require("http");
-const url = require("url");
 const MongoClient = require('mongodb').MongoClient;
 
 // Require custom node modules
@@ -21,6 +21,9 @@ server = http.createServer(app);
 // Set up express to parse JSON data from a request body
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Set up express to parse cookies
+app.use(cookieParser());
 
 // Set up static routes
 app.use(express.static(__dirname + '/../Client/Scripts/'));
@@ -68,7 +71,8 @@ app.post("/login", function(request, response)
 		}
 		else
 		{
-			response.redirect(url.format({pathname: "/", query: {authfail: true}}));
+			response.cookie("Alert", "Log in unsuccessful. Please try again with the correct details.", {maxAge: 30000});
+			response.redirect("/");
 		}
 	})
 	.catch(function(err)

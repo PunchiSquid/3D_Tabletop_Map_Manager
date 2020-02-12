@@ -5,6 +5,7 @@
   "main": "Server/server.js",
   "dependencies": {
     "bcrypt": "^3.0.8",
+    "cookie-parser": "^1.4.4",
     "express": "^4.17.1",
     "mongodb": "^3.5.2"
   },
@@ -24,6 +25,7 @@
   },
   "homepage": "https://github.com/ReeceStudent/3D_Tabletop_Map_Manager#readme",
   "engines": {
-    "node": "12.13.0"
+    "node": "12.13.0",
+	"npm": "6.12.0"
   }
 }
