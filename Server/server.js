@@ -1,6 +1,7 @@
 // Node package require statements
 const express = require("express");
 const cookieParser = require('cookie-parser');
+const session = require("client-sessions");
 const http = require("http");
 const MongoClient = require('mongodb').MongoClient;
 
@@ -24,6 +25,14 @@ app.use(express.urlencoded({ extended: true }));
 
 // Set up express to parse cookies
 app.use(cookieParser());
+
+// Set up session variables
+app.use(session
+({
+	cookieName: "map_session",
+	duration: 0.5 * 60 * 1000,
+	activeDuration: 0.5 * 60 * 1000
+}));
 
 // Set up static routes
 app.use(express.static(__dirname + '/../Client/Scripts/'));
