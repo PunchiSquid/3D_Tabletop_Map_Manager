@@ -17,17 +17,17 @@ module.exports = class Validator
 		}
 		
 		// Check fields are not null
-		if (inputData.username == null)
+		if (inputData.username == null || inputData.username === "")
 		{
 			validationResults.usernamePresent = false;
 		}
 		
-		if (inputData.password == null)
+		if (inputData.password == null || inputData.password === "")
 		{
 			validationResults.passwordPresent = false;
 		}
 		
-		if (inputData.emailAddress == null)
+		if (inputData.emailAddress == null || inputData.emailAddress === "")
 		{
 			validationResults.emailAddressPresent = false;
 		}
