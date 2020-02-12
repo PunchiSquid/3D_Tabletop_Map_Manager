@@ -38,6 +38,12 @@ app.get("/", function(request, response)
 	response.sendFile("/Client/login.html", {"root": __dirname + "/../"});
 });
 
+// Registration route
+app.get("/register", function(request, response)
+{
+	response.sendFile("/Client/register.html", {"root": __dirname + "/../"});
+});
+
 // Placeholder secure route
 app.get("/secure", function(request, response)
 {
@@ -96,14 +102,51 @@ app.post("/user-accounts", function(request, response)
 		emailAddress: body.emailAddress
 	}
 	
+	// Create a second JSON object for user authentication
+	let authenticationData = 
+	{
+		username: body.username, 
+		password: body.password
+	};
+	
 	// Add the record
 	connection.AddUserAccount(inputData).then(function(res)
-	{
-		response.send(res);
+	{		
+		response.cookie("Alert", "Registration Successful! Please log in.", {maxAge: 30000});
+		response.redirect("/");
 	})
 	.catch(function(err)
 	{
-		response.send(err);
+		if (!err.usernamePresent)
+		{
+			response.cookie("Alert", "No username entered. Please enter a username.", {maxAge: 30000});
+			response.redirect("/register");
+		}
+		else if (!err.passwordPresent)
+		{
+			response.cookie("Alert", "No password entered. Please enter a password.", {maxAge: 30000});
+			response.redirect("/register");
+		}
+		else if (!err.emailAddressPresent)
+		{
+			response.cookie("Alert", "No email address entered. Please enter an email address.", {maxAge: 30000});
+			response.redirect("/register");
+		}
+		else if (!err.emailAddessValid)
+		{
+			response.cookie("Alert", "The email address entered is invalid. Please use a valid email address.", {maxAge: 30000});
+			response.redirect("/register");
+		}
+		else if (!err.usernameUnique)
+		{
+			response.cookie("Alert", "The username is taken, please use a different username.", {maxAge: 30000});
+			response.redirect("/register");
+		}
+		else
+		{
+			response.cookie("Alert", "Error received: " + err + ".", {maxAge: 30000});
+			response.redirect("/register");
+		}
 	});
 });
 
