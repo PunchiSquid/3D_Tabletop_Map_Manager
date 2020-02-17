@@ -36,6 +36,9 @@ app.use(session
 
 // Set up static routes
 app.use(express.static(__dirname + '/../Client/Scripts/'));
+app.use(express.static(__dirname + '/../Client/Stylesheets/'));
+app.use(express.static(__dirname + '/../External Libraries/'));
+app.use(express.static(__dirname + '/../Resources/'));
 
 /***************/
 /* Page Routes */
@@ -58,6 +61,7 @@ app.get("/secure", function(request, response)
 {
 	if (request.map_session)
 	{
+		// Check the username in the session exists on the database
 		let connection = new MongoConnection(uri);
 		connection.GetUserAccountByUsername(request.map_session.username).then(function(res)
 		{
@@ -67,6 +71,7 @@ app.get("/secure", function(request, response)
 			}
 			else
 			{
+				// Reset user session if the account does not exist. 
 				request.map_session.reset();
 				response.cookie("Alert", "Session invalid. Please log in.", {maxAge: 30000});
 				response.redirect("/");
