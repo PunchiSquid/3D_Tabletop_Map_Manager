@@ -56,5 +56,17 @@ class Map
 			this.detailMatrix[i] = column;
 		}
 	}
+
+	/*
+	* Adds to the height map value at the specified location on the heightmap, 
+	* then returns the resultant value.
+	* @Param x The X index on the matrix.
+	* @Param y The Y index on the matrix.
+	* @Returns The resultant value after incrementing.
+	*/
+	AddBlock(x, y)
+	{
+		this.heightMap[x][y] += 1;
+		return(this.heightMap[x][y]);
 	}
 }
