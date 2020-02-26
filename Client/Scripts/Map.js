@@ -6,6 +6,7 @@ class Map
 		this.mapYDimension = mapYDimension;
 
 		this.GenerateHeightMap();
+		this.GenerateColourBufferArray();
 	}
 
 	/*
@@ -20,6 +21,24 @@ class Map
 			let column = new Array(this.mapYDimension);
 			column.fill(1);							// Fill with 1s to provide a flat plane
 			this.heightMap[i] = column;
+		}
+	}
+
+	/*
+	* Generates a colour buffer for displaying colours.
+	*/
+	GenerateColourBufferArray()
+	{
+		const colour = new THREE.Color("green");;
+		const colourCount = (this.mapXDimension * this.mapYDimension) + 1;
+
+		// Create a new array with RGB values for every block on the map grid
+		this.colourArray = new Float32Array(colourCount * 3 );
+		
+		// Add colour to the colour array
+		for (var i = 0; i < colourCount; i++)
+		{
+			colour.toArray( this.colourArray, i * 3 );
 		}
 	}
 	}
