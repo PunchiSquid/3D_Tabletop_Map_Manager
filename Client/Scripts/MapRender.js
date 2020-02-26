@@ -1,3 +1,10 @@
+SelectTypes = 
+{
+	SELECT: "select",
+	ADD: "add",
+	REMOVE: "remove"
+};
+
 class MapScreen
 {
 	constructor()
@@ -9,6 +16,8 @@ class MapScreen
 
 		// Bind the rendering function to a single instance
 		this.render = this.Render.bind(this);
+		// User interaction variables
+		this.activeSelectType = SelectTypes.SELECT;
 	/*
 	* Initialises the canvas, renderer, scene and camera, ready for display.
 	*/
@@ -144,3 +153,24 @@ var screen = new MapScreen();
 screen.InitialiseScene();
 screen.CreateNewMap();
 screen.BeginRendering();
+InitialiseEventListeners();
+/*
+* Binds event listeners to DOM objects.
+*/
+function InitialiseEventListeners()
+{
+	document.getElementById("button_select").addEventListener("click", function()
+	{
+		screen.activeSelectType = SelectTypes.SELECT;
+	});
+
+	document.getElementById("button_add").addEventListener("click", function()
+	{
+		screen.activeSelectType = SelectTypes.ADD;
+	});
+
+	document.getElementById("button_delete").addEventListener("click", function()
+	{
+		screen.activeSelectType = SelectTypes.REMOVE;
+	});
+}
