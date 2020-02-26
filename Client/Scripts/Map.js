@@ -7,6 +7,7 @@ class Map
 
 		this.GenerateHeightMap();
 		this.GenerateColourBufferArray();
+		this.GenerateDetailMatrix();
 	}
 
 	/*
@@ -39,6 +40,20 @@ class Map
 		for (var i = 0; i < colourCount; i++)
 		{
 			colour.toArray( this.colourArray, i * 3 );
+		}
+	}
+
+	/*
+	* Generates an empty matrix for descriptive details.
+	*/
+	GenerateDetailMatrix()
+	{
+		this.detailMatrix = new Array(this.mapXDimension);
+
+		for (let i = 0; i < this.detailMatrix.length; i++)
+		{
+			let column = new Array(this.mapYDimension);
+			this.detailMatrix[i] = column;
 		}
 	}
 	}
