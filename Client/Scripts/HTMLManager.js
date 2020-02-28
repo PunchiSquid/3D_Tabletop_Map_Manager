@@ -63,6 +63,9 @@ class HTMLGenerator
 		heightForm.style = "display: inline-block";
 
 		let descriptionForm = document.createElement("textarea");
+		let closeButton = document.createElement("input");
+		closeButton.setAttribute("type", "button");
+		closeButton.setAttribute("value", "Close");
 
 		/*
 		* Internal function for modifying block height when number field is modified.
@@ -86,8 +89,17 @@ class HTMLGenerator
 			this.currentLabelObject.instanceMatrix.needsUpdate = true;	
 		}
 
-		// Register event listener for when the height number field is modified.
+		/*
+		* Internal function for closing labels when the close button is clicked.
+		*/
+		const closeLabelFunction = function()
+		{
+			this.RemoveLabels();
+		}
+
+		// Register event listeners for label HTML interactions.
 		heightForm.addEventListener('change', heightModFunction.bind(this));
+		closeButton.addEventListener('mousedown', closeLabelFunction.bind(this));
 		
 
 		// Append the new label to the label container
@@ -96,6 +108,7 @@ class HTMLGenerator
 		this.newLabel.appendChild(heightForm);
 		this.newLabel.appendChild(descriptionTitle);
 		this.newLabel.appendChild(descriptionForm);
+		this.newLabel.appendChild(closeButton);
 
 		// Transform the new element with CSS
 		this.newLabel.style.transform = `translate(-50%, -50%) translate(${x}px,${y}px)`;
