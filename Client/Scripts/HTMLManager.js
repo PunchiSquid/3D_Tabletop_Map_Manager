@@ -43,7 +43,9 @@ class HTMLGenerator
 
 		var originalMatrix = new THREE.Matrix4();
 		this.currentLabelObject.getMatrixAt(this.currentLabelLocation, originalMatrix);
-		let val = this.mapScreen.mapMatrix.heightMap[originalMatrix.elements[12]][originalMatrix.elements[14]];
+		let heightValue = this.mapScreen.mapMatrix.heightMap[originalMatrix.elements[12]][originalMatrix.elements[14]];
+		let descriptionValue = this.mapScreen.mapMatrix.detailMatrix[originalMatrix.elements[12]][originalMatrix.elements[14]]
+
 
 		// Create a new label div
 		this.newLabel = document.createElement("div");
@@ -59,10 +61,11 @@ class HTMLGenerator
 		let heightForm = document.createElement("input");
 		heightForm.setAttribute("type", "number");
 		heightForm.setAttribute("min", "1");
-		heightForm.setAttribute("value", val);
+		heightForm.setAttribute("value", heightValue);
 		heightForm.style = "display: inline-block";
 
 		let descriptionForm = document.createElement("textarea");
+		descriptionForm.value = descriptionValue;
 		let closeButton = document.createElement("input");
 		closeButton.setAttribute("type", "button");
 		closeButton.setAttribute("value", "Close");
@@ -90,6 +93,20 @@ class HTMLGenerator
 		}
 
 		/*
+		* Internal function for modifying block description when the text area is modified.
+		*/
+		const descriptionModFunction = function()
+		{
+			// Retrieve the transformation matrix for the clicked instance
+			var matrix = new THREE.Matrix4();
+			this.currentLabelObject.getMatrixAt(this.currentLabelLocation, matrix);
+
+			// Increase the height value of the corresponding element in the map matrix
+			let value = descriptionForm.value;
+			this.mapScreen.mapMatrix.detailMatrix[matrix.elements[12]][matrix.elements[14]] = value;
+		}
+
+		/*
 		* Internal function for closing labels when the close button is clicked.
 		*/
 		const closeLabelFunction = function()
@@ -99,6 +116,7 @@ class HTMLGenerator
 
 		// Register event listeners for label HTML interactions.
 		heightForm.addEventListener('change', heightModFunction.bind(this));
+		descriptionForm.addEventListener('input', descriptionModFunction.bind(this));
 		closeButton.addEventListener('mousedown', closeLabelFunction.bind(this));
 		
 
