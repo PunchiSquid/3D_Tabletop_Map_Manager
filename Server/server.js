@@ -30,8 +30,8 @@ app.use(cookieParser());
 app.use(session
 ({
 	cookieName: "map_session",
-	duration: 0.5 * 60 * 1000,
-	activeDuration: 0.5 * 60 * 1000
+	duration: 60 * 60 * 1000,
+	activeDuration: 60 * 60 * 1000
 }));
 
 // Set up static routes
@@ -56,11 +56,6 @@ app.get("/register", function(request, response)
 	response.sendFile("/Client/register.html", {"root": __dirname + "/../"});
 });
 
-app.get("/map", function(request, response)
-{
-	response.sendFile("/Client/map.html", {"root": __dirname + "/../"});
-});
-
 // Placeholder secure route
 app.get("/secure", function(request, response)
 {
@@ -72,7 +67,7 @@ app.get("/secure", function(request, response)
 		{
 			if (res)
 			{
-				response.sendFile("/Client/secure.html", {"root": __dirname + "/../"});
+				response.sendFile("/Client/map.html", {"root": __dirname + "/../"});
 			}
 			else
 			{
