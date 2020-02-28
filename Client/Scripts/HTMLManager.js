@@ -127,7 +127,7 @@ class HTMLGenerator
 
 			var dummy = new THREE.Object3D();
 			var tempVector = new THREE.Vector3();
-			dummy.position.set(originalMatrix.elements[12], originalMatrix.elements[13], originalMatrix.elements[14]);
+			dummy.position.set(originalMatrix.elements[12], 0, originalMatrix.elements[14]);
 			dummy.updateMatrix();
 			dummy.getWorldPosition(tempVector);
 			tempVector.project(this.mapScreen.camera);
