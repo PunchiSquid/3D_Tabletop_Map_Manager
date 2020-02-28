@@ -64,6 +64,32 @@ class HTMLGenerator
 
 		let descriptionForm = document.createElement("textarea");
 
+		/*
+		* Internal function for modifying block height when number field is modified.
+		*/
+		const heightModFunction = function()
+		{
+			// Retrieve the transformation matrix for the clicked instance
+			var matrix = new THREE.Matrix4();
+			this.currentLabelObject.getMatrixAt(this.currentLabelLocation, matrix);
+
+			// Increase the height value of the corresponding element in the map matrix
+			let value = parseInt(heightForm.value);
+			this.mapScreen.mapMatrix.heightMap[matrix.elements[12]][matrix.elements[14]] = value;
+
+			// Set corresponding values in the transformation matrix for the instance
+			matrix.elements[5] = value;
+			matrix.elements[13] = value / 2;
+
+			// Set the transformation matrix to the instance and flag it for updates
+			this.currentLabelObject.setMatrixAt(this.currentLabelLocation, matrix);
+			this.currentLabelObject.instanceMatrix.needsUpdate = true;	
+		}
+
+		// Register event listener for when the height number field is modified.
+		heightForm.addEventListener('change', heightModFunction.bind(this));
+		
+
 		// Append the new label to the label container
 		this.labelContainer.appendChild(this.newLabel);
 		this.newLabel.appendChild(heightTitle);
