@@ -14,10 +14,20 @@ class MapScreen
 		this.yDimension = 20;
 		this.count = this.xDimension * this.yDimension + 1;
 
+		// Raycasting variables
+		this.pickPosition = {x: 0, y: 0};
+		this.mouseClicked = false;
+		this.pickHelper;
+
 		// Bind the rendering function to a single instance
 		this.render = this.Render.bind(this);
+
 		// User interaction variables
+		this.brushSize = 5;
 		this.activeSelectType = SelectTypes.SELECT;
+		this.html = new HTMLGenerator(this);
+	}
+
 	/*
 	* Initialises the canvas, renderer, scene and camera, ready for display.
 	*/
@@ -102,7 +112,10 @@ class MapScreen
 		}
 
 		mesh.instanceMatrix.needsUpdate = true;
+
+		this.pickHelper = new InstancedObjectPicker(this.mapMatrix, this.scene, this.camera, this.html);
 	}
+
 	/*
 	* Modifies the camera projection matrix and the canvas rendering resolution
 	* to account for modified canvas size.
@@ -133,6 +146,11 @@ class MapScreen
 			this.ResizeDisplay();
 		}
 		
+		this.html.MoveLabel();
+		this.pickHelper.ClearObjects(this.scene);
+		this.pickHelper.PickClickedObject(this.pickPosition, this.camera, this.mouseClicked, this.brushSize, this.activeSelectType);
+		this.pickHelper.PickHoveredObject(this.pickPosition, this.camera, this.brushSize);
+		this.mouseClicked = false;
 		
 		// Render the current frame and calculate the next frame
 		this.renderer.render(this.scene, this.camera);	
@@ -154,11 +172,55 @@ screen.InitialiseScene();
 screen.CreateNewMap();
 screen.BeginRendering();
 InitialiseEventListeners();
+
+// External event handlers and listeners
+
+/*
+* Gets the mouse position relative to the canvas.
+* @Param event Event object with position values.
+*/
+function GetCanvasRelativePosition(event)
+{
+	const rect = screen.canvas.getBoundingClientRect();
+	
+	const xValue = event.clientX - rect.left;
+	const yValue = event.clientY - rect.top;
+	
+	json = { x: xValue, y: yValue };
+	return (json);
+}
+
+/*
+* Sets the pick position for the InstancedObjectPicker to use.
+* @Param event Event object to retrieve mouse position relative to the canvas.
+*/
+function SetPickPosition(event) 
+{
+	const pos = GetCanvasRelativePosition(event);
+	screen.pickPosition.x = (pos.x / screen.canvas.clientWidth ) *  2 - 1;
+	screen.pickPosition.y = (pos.y / screen.canvas.clientHeight) * -2 + 1;  // note we flip Y
+}
+
+/*
+* Sets a variable to define if the mouse was clicked.
+* @Param event Event object that contains the clicked button.
+*/
+function SetClick(event)
+{
+	if (event.button == 0)
+	{
+		screen.mouseClicked = true;
+	}
+}
+
 /*
 * Binds event listeners to DOM objects.
 */
 function InitialiseEventListeners()
 {
+	screen.canvas.addEventListener('mousemove', SetPickPosition);
+	screen.canvas.addEventListener( 'mousedown', SetClick, false );
+
 	document.getElementById("button_select").addEventListener("click", function()
 	{
 		screen.activeSelectType = SelectTypes.SELECT;
