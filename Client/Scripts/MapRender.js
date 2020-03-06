@@ -143,11 +143,11 @@ class MapScreen
 		object.getMatrixAt(instance, matrix);
 
 		// Increase the height value of the corresponding element in the map matrix
-		this.mapMatrix.SetHeight(matrix.elements[12], matrix.elements[14], value);
+		var returnedValue = this.mapMatrix.SetHeight(matrix.elements[12], matrix.elements[14], value);
 
 		// Set corresponding values in the transformation matrix for the instance
-		matrix.elements[5] = value;
-		matrix.elements[13] = value / 2;
+		matrix.elements[5] = returnedValue;
+		matrix.elements[13] = returnedValue / 2;
 
 		// Set the transformation matrix to the instance and flag it for updates
 		object.setMatrixAt(instance, matrix);
