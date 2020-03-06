@@ -69,4 +69,14 @@ class Map
 		this.heightMap[x][y] += 1;
 		return(this.heightMap[x][y]);
 	}
+
+	SetHeight(x, y, height)
+	{
+		if (height > 0)
+		{
+			this.heightMap[x][y] = height;
+		}
+
+		return this.heightMap[x][y];
+	}
 }
