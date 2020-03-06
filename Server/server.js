@@ -28,8 +28,8 @@ app = express();
 server = http.createServer(app);
 
 // Set up express to parse JSON data from a request body
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({limit: '50MB', parameterLimit: 1000000, extended: true}));
+app.use(express.urlencoded({limit: '50MB', parameterLimit: 1000000, extended: true }));
 
 // Set up express to parse cookies
 app.use(cookieParser());
