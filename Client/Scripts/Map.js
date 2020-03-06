@@ -30,16 +30,19 @@ class Map
 	*/
 	GenerateColourBufferArray()
 	{
-		const colour = new THREE.Color("green");;
+		const colour = {r: 0, g: 0.5019607843137255, b: 0};
+
 		const colourCount = (this.mapXDimension * this.mapYDimension) + 1;
 
 		// Create a new array with RGB values for every block on the map grid
 		this.colourArray = new Float32Array(colourCount * 3 );
 		
 		// Add colour to the colour array
-		for (var i = 0; i < colourCount; i++)
+		for (var i = 0; i < colourCount * 3; i += 3)
 		{
-			colour.toArray( this.colourArray, i * 3 );
+			this.colourArray[i] = colour.r;
+			this.colourArray[i + 1] = colour.g;
+			this.colourArray[i + 2] = colour.b;
 		}
 	}
 
