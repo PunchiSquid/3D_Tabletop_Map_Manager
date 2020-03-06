@@ -243,7 +243,6 @@ module.exports = class MongoConnection
 					{
 						if (updateResponse.modifiedCount == 1)
 						{
-
 							// Close the connection and resolve the promise with the returned responses
 							dbResponse.close();
 							resolve(insertResponse);

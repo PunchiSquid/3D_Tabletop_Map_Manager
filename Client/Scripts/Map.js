@@ -1,6 +1,11 @@
 class Map
 {
-	constructor(mapXDimension, mapYDimension)
+	/*
+	* Creates a new map, generating a new height map, colour array and detail matrix
+	* @Param mapXDimension The x dimensions of the map.
+	* @Param mapYDimension The y dimensions of the map.
+	*/
+	GenerateNewMap(mapXDimension, mapYDimension)
 	{
 		this.mapXDimension = mapXDimension;
 		this.mapYDimension = mapYDimension;
