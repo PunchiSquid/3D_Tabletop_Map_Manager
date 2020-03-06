@@ -10,8 +10,8 @@ class MapScreen
 	constructor()
 	{
 		// Map size variables
-		this.xDimension = 20;
-		this.yDimension = 20;
+		this.xDimension = 5;
+		this.yDimension = 5;
 		this.count = this.xDimension * this.yDimension + 1;
 
 		// Raycasting variables
@@ -23,7 +23,7 @@ class MapScreen
 		this.render = this.Render.bind(this);
 
 		// User interaction variables
-		this.brushSize = 5;
+		this.brushSize = 1;
 		this.activeSelectType = SelectTypes.SELECT;
 		this.html = new HTMLGenerator(this);
 	}
@@ -128,6 +128,30 @@ class MapScreen
 		
 		// Modify the internal rendering resolution
 		this.renderer.setSize(this.canvas.clientWidth, this.canvas.clientHeight, false);
+	}
+
+	/*
+	* Increases the height of a block in the height map, then re-renders the corresponding instance.
+	* @Param value The value to set to the height map
+	* @Param object The object to set the resultant matrix to
+	* @Param instance The instance to transform.
+	*/
+	IncreaseHeightOfBlock(value, object, instance)
+	{
+		// Retrieve the transformation matrix for the clicked instance
+		var matrix = new THREE.Matrix4();
+		object.getMatrixAt(instance, matrix);
+
+		// Increase the height value of the corresponding element in the map matrix
+		this.mapMatrix.SetHeight(matrix.elements[12], matrix.elements[14], value);
+
+		// Set corresponding values in the transformation matrix for the instance
+		matrix.elements[5] = value;
+		matrix.elements[13] = value / 2;
+
+		// Set the transformation matrix to the instance and flag it for updates
+		object.setMatrixAt(instance, matrix);
+		object.instanceMatrix.needsUpdate = true;	
 	}
 
 	/*
