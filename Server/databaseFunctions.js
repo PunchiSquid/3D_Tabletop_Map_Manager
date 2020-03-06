@@ -211,4 +211,66 @@ module.exports = class MongoConnection
 			});	
 		});
 	}
+
+	/*
+	* Inserts a single user account record to the database.
+	* @Param inputData The user account object to insert into the database.
+	*/
+	AddMapRecord(inputMap, userID)
+	{		
+		// Create a local variable for the URL. The Promise seems to be unable to access the properties of the class.
+		let promiseURL = this.url;
+		
+		// Create and return a new promise for a later retrieved value
+		return new Promise(function(resolve, reject)
+		{					
+			// Set up a DB event handler for connections
+			MongoClient.connect(promiseURL,{ useNewUrlParser: true, useUnifiedTopology: true }).then(function(dbResponse)
+			{
+				// The specific database to access
+				var dbObject = dbResponse.db("map_manager_db");
+
+				// Inserts a new record into the database
+				dbObject.collection("maps").insertOne(inputMap).then(function(insertResponse)
+				{
+					// Query to identify the record being modified
+					let userQuery = { _id: ObjectID(userID) };
+
+					// Query to push a new characterSheet object ID to an array on a userAccount object
+					let addMapQuery = { $push: { "mapRecords": String(insertResponse.insertedId) } };
+
+					dbObject.collection("user_accounts").updateOne(userQuery, addMapQuery).then(function(updateResponse)
+					{
+						if (updateResponse.modifiedCount == 1)
+						{
+
+							// Close the connection and resolve the promise with the returned responses
+							dbResponse.close();
+							resolve(insertResponse);
+						}
+						else
+						{
+							// Close the connection and reject the promise and return the error
+							dbResponse.close();
+							reject(updateResponse.modifiedCount);
+							return;
+						}
+						
+					});
+				})
+				.catch(function (error) 
+				{
+					// Close the connection and reject the promise and return the error
+					dbResponse.close();
+					reject(error);
+					return;
+				});
+			})
+			.catch(function(error)
+			{
+				reject(error);
+				return;
+			});	
+		});
+	}
 }
