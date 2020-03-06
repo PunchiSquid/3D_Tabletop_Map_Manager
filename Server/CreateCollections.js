@@ -19,7 +19,6 @@ function CreateUserAccountCollection()
 			$jsonSchema:
 			{
 				required: ["username", "password", "emailAddress"],
-				additionalProperties: false,
 				properties:
 				{
 					username: 
@@ -62,7 +61,7 @@ function CreateUserAccountCollection()
 				dbObject.createIndex("user_accounts", {"username": 1}, { unique: true }).then(function(res)
 				{
 					// Insert placeholder record into the new collection
-					dbObject.collection("user_accounts").insertOne({ username: "TestUser", password: "TestPassword", emailAddress: "test@test.te.st" }).then(function(res)
+					dbObject.collection("user_accounts").insertOne({ username: "TestUser", password: "TestPassword", emailAddress: "test@test.te.st", mapRecords: [] }).then(function(res)
 					{
 						resolve("Completed creation of user_accounts and insertion of a placeholder record");
 						dbResponse.close();
