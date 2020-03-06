@@ -4,14 +4,22 @@ const cookieParser = require('cookie-parser');
 const session = require("client-sessions");
 const http = require("http");
 const MongoClient = require('mongodb').MongoClient;
+const fs = require('fs');
 
 // Require custom node modules
 const MongoConnection = require('./databaseFunctions');
+
+// Load connection strings
+let rawdata = fs.readFileSync(__dirname + '\\connection.json');
+let connection = JSON.parse(rawdata);
 
 // Port used to listen for connections 
 // If hosted on Heroku, the port is defined by the service
 // If hosted locally the port is 9000
 const port = process.env.PORT || 9000;
+
+// MongoDB URI
+const uri = connection.uri;
 
 // Initialise the Express app.
 app = express();
@@ -30,6 +38,7 @@ app.use(cookieParser());
 app.use(session
 ({
 	cookieName: "map_session",
+	secret: connection.session,
 	duration: 60 * 60 * 1000,
 	activeDuration: 60 * 60 * 1000
 }));

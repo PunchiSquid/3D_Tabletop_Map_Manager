@@ -1,5 +1,13 @@
 // MongoClient node API
 const MongoClient = require("mongodb").MongoClient;
+const fs = require('fs');
+
+// Load connection strings
+let rawdata = fs.readFileSync(__dirname + '\\connection.json');
+let connection = JSON.parse(rawdata);
+
+// MongoDB URI
+const uri = connection.uri;
 
 function CreateUserAccountCollection()
 {		
