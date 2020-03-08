@@ -79,7 +79,8 @@ class MapScreen
 	CreateNewMap()
 	{
 		// Generate a new map
-		this.mapMatrix = new Map(this.xDimension, this.yDimension);
+		this.mapMatrix = new Map();
+		this.mapMatrix.GenerateNewMap(this.xDimension, this.yDimension);
 
 		// Set up the geometry
 		let boxGeometry = new THREE.BoxGeometry(1, 1, 1);

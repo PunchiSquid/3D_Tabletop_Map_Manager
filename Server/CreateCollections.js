@@ -1,5 +1,13 @@
 // MongoClient node API
 const MongoClient = require("mongodb").MongoClient;
+const fs = require('fs');
+
+// Load connection strings
+let rawdata = fs.readFileSync(__dirname + '\\connection.json');
+let connection = JSON.parse(rawdata);
+
+// MongoDB URI
+const uri = connection.uri;
 
 function CreateUserAccountCollection()
 {		
@@ -11,7 +19,6 @@ function CreateUserAccountCollection()
 			$jsonSchema:
 			{
 				required: ["username", "password", "emailAddress"],
-				additionalProperties: false,
 				properties:
 				{
 					username: 
@@ -54,7 +61,7 @@ function CreateUserAccountCollection()
 				dbObject.createIndex("user_accounts", {"username": 1}, { unique: true }).then(function(res)
 				{
 					// Insert placeholder record into the new collection
-					dbObject.collection("user_accounts").insertOne({ username: "TestUser", password: "TestPassword", emailAddress: "test@test.te.st" }).then(function(res)
+					dbObject.collection("user_accounts").insertOne({ username: "TestUser", password: "TestPassword", emailAddress: "test@test.te.st", mapRecords: [] }).then(function(res)
 					{
 						resolve("Completed creation of user_accounts and insertion of a placeholder record");
 						dbResponse.close();

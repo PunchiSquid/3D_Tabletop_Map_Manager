@@ -4,14 +4,23 @@ const cookieParser = require('cookie-parser');
 const session = require("client-sessions");
 const http = require("http");
 const MongoClient = require('mongodb').MongoClient;
+const fs = require('fs');
 
 // Require custom node modules
 const MongoConnection = require('./databaseFunctions');
+const Map = require(__dirname + './../Client/Scripts/Map.js');
+
+// Load connection strings
+let rawdata = fs.readFileSync(__dirname + '\\connection.json');
+let connection = JSON.parse(rawdata);
 
 // Port used to listen for connections 
 // If hosted on Heroku, the port is defined by the service
 // If hosted locally the port is 9000
 const port = process.env.PORT || 9000;
+
+// MongoDB URI
+const uri = connection.uri;
 
 // Initialise the Express app.
 app = express();
@@ -20,8 +29,8 @@ app = express();
 server = http.createServer(app);
 
 // Set up express to parse JSON data from a request body
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({limit: '50MB', parameterLimit: 1000000, extended: true}));
+app.use(express.urlencoded({limit: '50MB', parameterLimit: 1000000, extended: true }));
 
 // Set up express to parse cookies
 app.use(cookieParser());
@@ -30,6 +39,7 @@ app.use(cookieParser());
 app.use(session
 ({
 	cookieName: "map_session",
+	secret: connection.session,
 	duration: 60 * 60 * 1000,
 	activeDuration: 60 * 60 * 1000
 }));
@@ -188,6 +198,30 @@ app.post("/user-accounts", function(request, response)
 			response.cookie("Alert", "Error received: " + err + ".", {maxAge: 30000});
 			response.redirect("/register");
 		}
+	});
+});
+
+// Route to insert new map record
+app.post("/maps", function(request, response)
+{
+	// Create a MongoDB connection
+	let body = request.body;
+	let connection = new MongoConnection(uri);
+
+	// Convert request body data into a more easily usable object form
+	let inputMap = JSON.parse(body.map);
+	let inputUserID = body.userID;
+
+	// Add the record
+	connection.AddMapRecord(inputMap, inputUserID).then(function(res)
+	{
+		response.cookie("Alert", "New Map Generated!", {maxAge: 30000});
+		response.send("Success");
+	})
+	.catch(function(err)
+	{
+		response.cookie("Alert", "Error received: " + err + ".", {maxAge: 30000});
+		response.redirect("/");
 	});
 });
 
