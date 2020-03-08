@@ -208,6 +208,33 @@ app.post("/user-accounts", function(request, response)
 	});
 });
 
+// Route to retrieve a list of map records
+app.get("/maplist", function(request, response)
+{
+	if (request.map_session)
+	{
+		// Create a MongoDB connection
+		let connection = new MongoConnection(uri);
+
+		// Retrieve records
+		connection.GetMapRecords(request.map_session.userID).then(function(res)
+		{
+			response.cookie("Alert", "Maps retrieved!", {maxAge: 30000});
+			response.send(res);
+		})
+		.catch(function(err)
+		{
+			response.cookie("Alert", "Error received: " + err + ".", {maxAge: 30000});
+			response.redirect("/");
+		});
+	}
+	else
+	{
+		response.cookie("Alert", "Session invalid. Please log in.", {maxAge: 30000});
+		response.redirect("/");
+	}
+});
+
 // Route to insert new map record
 app.post("/maps", function(request, response)
 {
