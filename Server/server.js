@@ -8,6 +8,7 @@ const fs = require('fs');
 
 // Require custom node modules
 const MongoConnection = require('./databaseFunctions');
+const Map = require(__dirname + './../Client/Scripts/Map.js');
 
 // Load connection strings
 let rawdata = fs.readFileSync(__dirname + '\\connection.json');
@@ -197,6 +198,30 @@ app.post("/user-accounts", function(request, response)
 			response.cookie("Alert", "Error received: " + err + ".", {maxAge: 30000});
 			response.redirect("/register");
 		}
+	});
+});
+
+// Route to insert new map record
+app.post("/maps", function(request, response)
+{
+	// Create a MongoDB connection
+	let body = request.body;
+	let connection = new MongoConnection(uri);
+
+	// Convert request body data into a more easily usable object form
+	let inputMap = JSON.parse(body.map);
+	let inputUserID = body.userID;
+
+	// Add the record
+	connection.AddMapRecord(inputMap, inputUserID).then(function(res)
+	{
+		response.cookie("Alert", "New Map Generated!", {maxAge: 30000});
+		response.send("Success");
+	})
+	.catch(function(err)
+	{
+		response.cookie("Alert", "Error received: " + err + ".", {maxAge: 30000});
+		response.redirect("/");
 	});
 });
 
