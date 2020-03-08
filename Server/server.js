@@ -11,7 +11,7 @@ const MongoConnection = require('./databaseFunctions');
 const Map = require(__dirname + './../Client/Scripts/Map.js');
 
 // Load connection strings
-let rawdata = fs.readFileSync(__dirname + '\\connection.json');
+let rawdata = fs.readFileSync(__dirname + '/connection.json');
 let connection = JSON.parse(rawdata);
 
 // Port used to listen for connections 
