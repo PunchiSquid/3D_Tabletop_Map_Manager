@@ -187,7 +187,8 @@ module.exports = class MongoConnection
 					// Hash the input password before storing it in the database
 					bcrypt.compare(inputData.password, response.password).then(function(result)
 					{					
-						resolve(result);
+						let finalResponse = {_id: response._id, result: result};
+						resolve(finalResponse);
 					})
 					.catch(function (error) 
 					{

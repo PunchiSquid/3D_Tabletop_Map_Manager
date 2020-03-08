@@ -126,10 +126,11 @@ app.post("/login", function(request, response)
 	
 	// Authenticate the record
 	connection.AuthenticateAccount(inputData).then(function(res)
-	{		
-		if (res == true)
+	{
+		if (res.result == true)
 		{
 			request.map_session.username = request.body.username;
+			request.map_session.userID = res._id;
 			response.redirect("/secure");
 		}
 		else
