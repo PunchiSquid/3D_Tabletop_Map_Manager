@@ -225,7 +225,7 @@ app.post("/maps", function(request, response)
 	});
 });
 
-// Route to insert new map record
+// Route to modify a map record
 app.put("/map", function(request, response)
 {
 	// Create a MongoDB connection
@@ -234,12 +234,11 @@ app.put("/map", function(request, response)
 
 	// Convert request body data into a more easily usable object form
 	let inputMap = JSON.parse(body.map);
-	let inputUserID = body.userID;
 
 	// Add the record
 	connection.UpdateMapRecord(inputMap).then(function(res)
 	{
-		response.cookie("Alert", "New Map Generated!", {maxAge: 30000});
+		response.cookie("Alert", "Map Modified Successfully!", {maxAge: 30000});
 		response.send("Success");
 	})
 	.catch(function(err)
