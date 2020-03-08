@@ -66,6 +66,12 @@ app.get("/register", function(request, response)
 	response.sendFile("/Client/register.html", {"root": __dirname + "/../"});
 });
 
+// Registration route
+app.get("/list", function(request, response)
+{
+	response.sendFile("/Client/list.html", {"root": __dirname + "/../"});
+});
+
 // Placeholder secure route
 app.get("/secure", function(request, response)
 {
