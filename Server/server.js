@@ -225,6 +225,30 @@ app.post("/maps", function(request, response)
 	});
 });
 
+// Route to insert new map record
+app.put("/map", function(request, response)
+{
+	// Create a MongoDB connection
+	let body = request.body;
+	let connection = new MongoConnection(uri);
+
+	// Convert request body data into a more easily usable object form
+	let inputMap = JSON.parse(body.map);
+	let inputUserID = body.userID;
+
+	// Add the record
+	connection.UpdateMapRecord(inputMap).then(function(res)
+	{
+		response.cookie("Alert", "New Map Generated!", {maxAge: 30000});
+		response.send("Success");
+	})
+	.catch(function(err)
+	{
+		response.cookie("Alert", "Error received: " + err + ".", {maxAge: 30000});
+		response.redirect("/");
+	});
+});
+
 // HelloWorld route
 app.get("/HelloWorld", function(request, response)
 {
