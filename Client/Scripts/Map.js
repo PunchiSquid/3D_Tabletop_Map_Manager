@@ -15,6 +15,15 @@ class Map
 		this.GenerateDetailMatrix();
 	}
 
+	LoadFromRecord(mapRecord)
+	{
+		this.heightMap = mapRecord.heightMap;
+		this.colourArray = mapRecord.colourArray;
+		this.name = mapRecord.name;
+		this.description = mapRecord.description;
+		this.detailMatrix = mapRecord.detailMatrix;
+	}
+
 	/*
 	* Generates a flat height map matrix.
 	*/
