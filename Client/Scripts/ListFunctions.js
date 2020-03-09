@@ -67,6 +67,7 @@ function PopulateMapList()
 
             $(editButton).click(function()
             {
+                window.location.href = "/editor/" + editButton.value;
                 console.log(editButton.value);
             });
         }

@@ -10,8 +10,8 @@ class MapScreen
 	constructor()
 	{
 		// Map size variables
-		this.xDimension = 5;
-		this.yDimension = 5;
+		this.xDimension = 125;
+		this.yDimension = 125;
 		this.count = this.xDimension * this.yDimension + 1;
 
 		// Raycasting variables
@@ -73,6 +73,38 @@ class MapScreen
 		controls.update();
 	}
 
+	LoadMap()
+	{
+		let code = document.location.href.split('/');
+
+		$.get("/map/" + code[code.length - 1], function(data, status)
+		{
+			console.log(data);
+			this.mapMatrix.LoadFromRecord(data);
+
+			// Iterate through the height map and move instances to fill the generated map
+			let matrix = new THREE.Matrix4();
+			let offset = 0;
+
+			for (let i = 0; i < this.mapMatrix.heightMap.length; i++)
+			{
+				for (let j = 0; j < this.mapMatrix.heightMap[i].length; j++)
+				{			
+					offset++;
+					this.mesh.getMatrixAt(offset, matrix);
+					let value = this.mapMatrix.heightMap[i][j];
+					matrix.elements[5] = value;
+					matrix.elements[13] = value / 2;
+
+					this.mesh.setMatrixAt( offset, matrix );
+				}
+			}
+
+			this.mesh.instanceMatrix.needsUpdate = true;
+
+		}.bind(this));
+	}
+
 	/*
 	* Generates a new flat map with defined dimensions, then adds it to the scene.
 	*/
@@ -80,6 +112,7 @@ class MapScreen
 	{
 		// Generate a new map
 		this.mapMatrix = new Map();
+
 		this.mapMatrix.GenerateNewMap(this.xDimension, this.yDimension);
 
 		// Set up the geometry
@@ -93,9 +126,9 @@ class MapScreen
 		material.vertexColors = THREE.VertexColors;
 
 		// Set up the final instanced mesh and add to the scene
-		let mesh = new THREE.InstancedMesh( geometry, material, this.count);
-		mesh.instanceMatrix.setUsage( THREE.DynamicDrawUsage ); // will be updated every frame
-		this.scene.add(mesh);
+		this.mesh = new THREE.InstancedMesh( geometry, material, this.count);
+		this.mesh.instanceMatrix.setUsage( THREE.DynamicDrawUsage ); // will be updated every frame
+		this.scene.add(this.mesh);
 
 		// Iterate through the height map and move instances to fill the generated map
 		const dummy = new THREE.Object3D();
@@ -108,11 +141,11 @@ class MapScreen
 				offset++;
 				dummy.position.set(i, this.mapMatrix.heightMap[i][j] / 2, j);
 				dummy.updateMatrix();
-				mesh.setMatrixAt( offset, dummy.matrix );
+				this.mesh.setMatrixAt( offset, dummy.matrix );
 			}
 		}
 
-		mesh.instanceMatrix.needsUpdate = true;
+		this.mesh.instanceMatrix.needsUpdate = true;
 
 		this.pickHelper = new InstancedObjectPicker(this.mapMatrix, this.scene, this.camera, this.html);
 	}
@@ -197,6 +230,7 @@ screen.InitialiseScene();
 screen.CreateNewMap();
 screen.BeginRendering();
 InitialiseEventListeners();
+screen.LoadMap();
 
 // External event handlers and listeners
 
