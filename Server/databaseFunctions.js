@@ -187,7 +187,8 @@ module.exports = class MongoConnection
 					// Hash the input password before storing it in the database
 					bcrypt.compare(inputData.password, response.password).then(function(result)
 					{					
-						resolve(result);
+						let finalResponse = {_id: response._id, result: result};
+						resolve(finalResponse);
 					})
 					.catch(function (error) 
 					{
@@ -255,6 +256,78 @@ module.exports = class MongoConnection
 							return;
 						}
 						
+					});
+				})
+				.catch(function (error) 
+				{
+					// Close the connection and reject the promise and return the error
+					dbResponse.close();
+					reject(error);
+					return;
+				});
+			})
+			.catch(function(error)
+			{
+				reject(error);
+				return;
+			});	
+		});
+	}
+
+	/*
+	* Retrieves map records by the user _id input.
+	* @Param inputUserID The user _id field to find records by.
+	*/
+	GetMapRecords(inputUserID)
+	{
+		// Create a local variable for the URL. The Promise seems to be unable to access the properties of the class.
+		let promiseURL = this.url;
+		
+		// Create and return a new promise for a later retrieved value
+		return new Promise(function(resolve, reject)
+		{				
+			// Set up a DB event handler for connections
+			MongoClient.connect(promiseURL,{ useNewUrlParser: true, useUnifiedTopology: true }).then(function(dbResponse)
+			{
+				// The specific database to access
+				var dbObject = dbResponse.db("map_manager_db");
+				
+				// Create a query based on input parameters
+				let query = { _id: ObjectID(inputUserID) };
+				let projection = {projection: { "mapRecords": 1 } };
+				
+				// Finds and returns a single entry that matches the query
+				dbObject.collection("user_accounts").findOne(query, projection).then(function(response)
+				{
+					// Retrieve the map record IDs from the account, then convert into a new query
+					let mapRecordStrings = Array.from(response.mapRecords);
+					let mapRecordObjectIDs = new Array();
+					
+					for (var i = 0; i < mapRecordStrings.length; i++)
+					{
+						mapRecordObjectIDs[i] = ObjectID(mapRecordStrings[i]);
+					}
+					
+					// Retrieve a record corresponding to every ObjectID in the array
+					let mapRecordQuery = {	_id: { $in: mapRecordObjectIDs } };
+					let mapRecordProjection = {projection: { "_id": 1, "name": 1, "description": 1 }};
+					
+					// Retrieves map records from the database
+					dbObject.collection("maps").find(mapRecordQuery, mapRecordProjection, function(error, cursor)
+					{						
+						if (error)
+						{
+							reject(error);
+							dbResponse.close();
+							return;
+						}
+						else
+						{
+							let resultArray = cursor.toArray();
+							resolve(resultArray);
+							dbResponse.close();
+							return;
+						}
 					});
 				})
 				.catch(function (error) 
