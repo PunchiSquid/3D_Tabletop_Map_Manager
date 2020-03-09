@@ -11,18 +11,58 @@ function PopulateMapList()
     {
         for (let i = 0; i < data.length; i++)
         {
-            let text = document.createElement("p");
+            let outerContainer = document.createElement("div");
+            outerContainer.setAttribute("class", "outerContainer");
+            container.appendChild(outerContainer);
+
+            let name = document.createElement("h3");
+            name.setAttribute("class", "name");
+            outerContainer.appendChild(name);
+
+            let innerContainer = document.createElement("div");
+            innerContainer.setAttribute("class", "innerContainer");
+            outerContainer.appendChild(innerContainer);
+
+            let description = document.createElement("p");
+            description.setAttribute("class", "description");
+            innerContainer.appendChild(description);
+
+            let buttonContainer = document.createElement("div");
+            buttonContainer.setAttribute("class", "buttonContainer");
+            innerContainer.appendChild(buttonContainer);
+
+            let editButton = document.createElement("button");
+            editButton.textContent = "Edit";
+            editButton.setAttribute("value", data[i]._id);
+            buttonContainer.appendChild(editButton);
+
+            let deleteButton = document.createElement("button");
+            deleteButton.textContent = "Delete";
+            deleteButton.setAttribute("value", data[i]._id);
+            buttonContainer.appendChild(deleteButton);
 
             if (data[i].name != null)
             {
-                text.textContent = data[i].name;
+                name.textContent = data[i].name;
             }
             else
             {
-                text.textContent = "No name.";
+                name.textContent = "No Name";
             }
-            
-            container.appendChild(text);
+
+            if (data[i].description != null)
+            {
+                description.textContent = data[i].description;
+            }
+            else
+            {
+                description.textContent = "No description.";
+            }
+
+            $(editButton).click(function()
+            {
+                console.log(editButton.value);
+            });
         }
     });
 }
