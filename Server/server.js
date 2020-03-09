@@ -66,6 +66,12 @@ app.get("/register", function(request, response)
 	response.sendFile("/Client/register.html", {"root": __dirname + "/../"});
 });
 
+// Registration route
+app.get("/list", function(request, response)
+{
+	response.sendFile("/Client/list.html", {"root": __dirname + "/../"});
+});
+
 // Placeholder secure route
 app.get("/secure", function(request, response)
 {
@@ -120,10 +126,11 @@ app.post("/login", function(request, response)
 	
 	// Authenticate the record
 	connection.AuthenticateAccount(inputData).then(function(res)
-	{		
-		if (res == true)
+	{
+		if (res.result == true)
 		{
 			request.map_session.username = request.body.username;
+			request.map_session.userID = res._id;
 			response.redirect("/secure");
 		}
 		else
@@ -199,6 +206,33 @@ app.post("/user-accounts", function(request, response)
 			response.redirect("/register");
 		}
 	});
+});
+
+// Route to retrieve a list of map records
+app.get("/maplist", function(request, response)
+{
+	if (request.map_session)
+	{
+		// Create a MongoDB connection
+		let connection = new MongoConnection(uri);
+
+		// Retrieve records
+		connection.GetMapRecords(request.map_session.userID).then(function(res)
+		{
+			response.cookie("Alert", "Maps retrieved!", {maxAge: 30000});
+			response.send(res);
+		})
+		.catch(function(err)
+		{
+			response.cookie("Alert", "Error received: " + err + ".", {maxAge: 30000});
+			response.redirect("/");
+		});
+	}
+	else
+	{
+		response.cookie("Alert", "Session invalid. Please log in.", {maxAge: 30000});
+		response.redirect("/");
+	}
 });
 
 // Route to insert new map record
