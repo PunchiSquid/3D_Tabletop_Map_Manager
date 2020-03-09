@@ -275,18 +275,61 @@ module.exports = class MongoConnection
 	}
 
 	/*
-	* Retrieves map records by the user _id input.
-	* @Param inputUserID The user _id field to find records by.
+	* Updates a single map record on the database.
+	* @Param inputMap The map object to replace.
 	*/
-	GetMapRecords(inputUserID)
+	UpdateMapRecord(inputMap)
 	{
 		// Create a local variable for the URL. The Promise seems to be unable to access the properties of the class.
 		let promiseURL = this.url;
 		
 		// Create and return a new promise for a later retrieved value
 		return new Promise(function(resolve, reject)
-		{				
+		{					
 			// Set up a DB event handler for connections
+			MongoClient.connect(promiseURL,{ useNewUrlParser: true, useUnifiedTopology: true }).then(function(dbResponse)
+			{
+				// Store the ID and remove from the object to avoid accidentally altering the primary key
+				let id = inputMap._id;
+				delete inputMap._id;
+
+				// The specific database to access
+				var dbObject = dbResponse.db("map_manager_db");
+
+				// Query to identify the record being modified
+				let mapQuery = { _id: ObjectID(id) };
+
+				// Inserts a new record into the database
+				dbObject.collection("maps").replaceOne(mapQuery, inputMap).then(function(response)
+				{
+					// Close the connection and reject the promise and return the error
+					dbResponse.close();
+					resolve(response);
+					return;
+				})
+				.catch(function (error) 
+				{
+					// Close the connection and reject the promise and return the error
+					dbResponse.close();
+					reject(error);
+					return;
+				});
+			})
+			.catch(function(error)
+			{
+				reject(error);
+				return;
+			});	
+		});
+	}
+                                                                                               
+  /*   
+  * Retrieves map records by the user _id input.
+	* @Param inputUserID The user _id field to find records by.
+	*/
+	GetMapRecords(inputUserID)
+  {
+    // Set up a DB event handler for connections
 			MongoClient.connect(promiseURL,{ useNewUrlParser: true, useUnifiedTopology: true }).then(function(dbResponse)
 			{
 				// The specific database to access
@@ -329,20 +372,5 @@ module.exports = class MongoConnection
 							return;
 						}
 					});
-				})
-				.catch(function (error) 
-				{
-					// Close the connection and reject the promise and return the error
-					dbResponse.close();
-					reject(error);
-					return;
-				});
-			})
-			.catch(function(error)
-			{
-				reject(error);
-				return;
-			});	
-		});
-	}
+        }
 }
