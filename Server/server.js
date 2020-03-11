@@ -66,14 +66,14 @@ app.get("/register", function(request, response)
 	response.sendFile("/Client/register.html", {"root": __dirname + "/../"});
 });
 
-// Registration route
+// List route
 app.get("/list", function(request, response)
 {
 	response.sendFile("/Client/list.html", {"root": __dirname + "/../"});
 });
 
 // Placeholder secure route
-app.get("/secure", function(request, response)
+app.get("/editor/:mapID", function(request, response)
 {
 	if (request.map_session)
 	{
@@ -131,7 +131,7 @@ app.post("/login", function(request, response)
 		{
 			request.map_session.username = request.body.username;
 			request.map_session.userID = res._id;
-			response.redirect("/secure");
+			response.redirect("/list");
 		}
 		else
 		{
@@ -251,6 +251,25 @@ app.post("/maps", function(request, response)
 	{
 		response.cookie("Alert", "New Map Generated!", {maxAge: 30000});
 		response.send("Success");
+	})
+	.catch(function(err)
+	{
+		response.cookie("Alert", "Error received: " + err + ".", {maxAge: 30000});
+		response.redirect("/");
+	});
+});
+
+// Route to modify a map record
+app.get("/map/:mapID", function(request, response)
+{
+	// Create a MongoDB connection
+	let connection = new MongoConnection(uri);
+
+	// Add the record
+	connection.GetMapRecord(request.params.mapID).then(function(res)
+	{
+		response.cookie("Alert", "Map Retrieved Successfully!", {maxAge: 30000});
+		response.send(res);
 	})
 	.catch(function(err)
 	{

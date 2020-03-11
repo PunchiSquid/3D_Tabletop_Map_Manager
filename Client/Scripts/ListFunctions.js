@@ -3,6 +3,11 @@ $(document).ready(function()
 	PopulateMapList();
 });
 
+function LoadMap(mapID)
+{
+    return null;
+}
+
 function PopulateMapList()
 {
     let container = document.querySelector('#map_list');
@@ -34,6 +39,7 @@ function PopulateMapList()
             let editButton = document.createElement("button");
             editButton.textContent = "Edit";
             editButton.setAttribute("value", data[i]._id);
+            editButton.setAttribute("href", "/");
             buttonContainer.appendChild(editButton);
 
             let deleteButton = document.createElement("button");
@@ -61,6 +67,7 @@ function PopulateMapList()
 
             $(editButton).click(function()
             {
+                window.location.href = "/editor/" + editButton.value;
                 console.log(editButton.value);
             });
         }

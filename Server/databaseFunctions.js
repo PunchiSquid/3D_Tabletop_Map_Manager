@@ -323,7 +323,7 @@ module.exports = class MongoConnection
 		});
 	}
 
-	 /*
+	/*
 	* Retrieves map records by the user _id input.
 	* @Param inputUserID The user _id field to find records by.
 	*/
@@ -378,6 +378,48 @@ module.exports = class MongoConnection
 							return;
 						}
 					});
+				})
+				.catch(function(error)
+				{
+					reject(error);
+					return;
+				});
+			})
+			.catch(function(error)
+			{
+				reject(error);
+				return;
+			});
+		});
+	}
+
+	/*
+	* Retrieves a single map record by the map _id input.
+	* @Param inputMapID The map _id field to find records by.
+	*/
+	GetMapRecord(inputMapID)
+  	{
+		// Create a local variable for the URL. The Promise seems to be unable to access the properties of the class.
+		let promiseURL = this.url;
+
+		// Create and return a new promise for a later retrieved value
+		return new Promise(function(resolve, reject)
+		{		
+			// Set up a DB event handler for connections
+			MongoClient.connect(promiseURL,{ useNewUrlParser: true, useUnifiedTopology: true }).then(function(dbResponse)
+			{
+				// The specific database to access
+				var dbObject = dbResponse.db("map_manager_db");
+				
+				// Create a query based on input parameters
+				let query = { _id: ObjectID(inputMapID) };
+				
+				// Finds and returns a single entry that matches the query
+				dbObject.collection("maps").findOne(query).then(function(response)
+				{
+					resolve(response);
+					dbResponse.close();
+					return;
 				})
 				.catch(function(error)
 				{
