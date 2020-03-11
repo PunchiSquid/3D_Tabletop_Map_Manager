@@ -50,6 +50,38 @@
 	color: white;
 }
 
+#left_buttons
+{
+	position: absolute;
+	display: flex;
+	flex-direction: row;
+	justify-content: space-evenly;
+	width: 10%;
+	top: 1%;
+	left: 1%;
+}
+
+#left_buttons>button
+{
+	color: white;
+	background-color: black;
+	border-color: black;
+	border: #000;
+	
+	height: auto;
+}
+
+#left_buttons>button>img
+{
+	color: white;
+	background-color: black;
+	border-color: black;
+	border: #000;
+
+	width: 100%;
+	height: auto;
+}
+
 #right_buttons
 {
 	position: absolute;
@@ -149,4 +181,5 @@
 	align-items: flex-end;
     width: 25%;
     height: 100%;
+}
 }
