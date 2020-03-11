@@ -131,7 +131,7 @@ app.post("/login", function(request, response)
 		{
 			request.map_session.username = request.body.username;
 			request.map_session.userID = res._id;
-			response.redirect("/secure");
+			response.redirect("/list");
 		}
 		else
 		{
