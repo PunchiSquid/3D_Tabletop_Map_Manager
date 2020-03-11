@@ -73,18 +73,39 @@ class MapScreen
 		controls.update();
 	}
 
+	/*
+	* Load a map from the database based on the URL parameters
+	*/
 	LoadMap()
 	{
-		let code = document.location.href.split('/');
+		// Retrieve the last part of the URL, the ID
+		let urlParameter = document.location.href.split('/');
+		let id = urlParameter[urlParameter.length - 1];
 
-		$.get("/map/" + code[code.length - 1], function(data, status)
+		// Construct a new map and load from a file
+		this.mapMatrix = new Map();
+		this.mapMatrix.LoadMap(id).then(function() 
 		{
-			console.log(data);
-			this.mapMatrix.LoadFromRecord(data);
+			// Set up the geometry
+			let boxGeometry = new THREE.BoxGeometry(1, 1, 1);
+			let geometry = new THREE.InstancedBufferGeometry();
+			geometry.fromGeometry(boxGeometry);
+
+			// Set up a colour buffer for the mesh
+			let material = new THREE.MeshPhongMaterial();
+			geometry.setAttribute( 'color', new THREE.InstancedBufferAttribute( this.mapMatrix.colourArray, 3 ) );
+
+			material.vertexColors = THREE.VertexColors;
+
+			// Set up the final instanced mesh and add to the scene
+			this.mesh = new THREE.InstancedMesh( geometry, material, this.count);
+			this.mesh.instanceMatrix.setUsage( THREE.DynamicDrawUsage ); // will be updated every frame
+			this.scene.add(this.mesh);
 
 			// Iterate through the height map and move instances to fill the generated map
 			let matrix = new THREE.Matrix4();
 			let offset = 0;
+			const dummy = new THREE.Object3D();
 
 			for (let i = 0; i < this.mapMatrix.heightMap.length; i++)
 			{
@@ -93,61 +114,34 @@ class MapScreen
 					offset++;
 					this.mesh.getMatrixAt(offset, matrix);
 					let value = this.mapMatrix.heightMap[i][j];
-					matrix.elements[5] = value;
-					matrix.elements[13] = value / 2;
 
-					this.mesh.setMatrixAt( offset, matrix );
+					dummy.position.set(i, value / 2, j);
+					dummy.updateMatrix();
+					dummy.matrix.elements[5] = value;
+					dummy.matrix.elements[13] = value / 2;
+					this.mesh.setMatrixAt( offset, dummy.matrix );
 				}
 			}
 
+			// Flag the matrix for updating
 			this.mesh.instanceMatrix.needsUpdate = true;
+
+			// Create a new helper class to assist in raycasting and object picking, then begin the render cycle
+			this.pickHelper = new InstancedObjectPicker(this.mapMatrix, this.scene, this.camera, this.html);
+			this.BeginRendering();
 
 		}.bind(this));
 	}
 
 	/*
-	* Generates a new flat map with defined dimensions, then adds it to the scene.
+	* Save the current map to the database
 	*/
-	CreateNewMap()
+	SaveMap()
 	{
-		// Generate a new map
-		this.mapMatrix = new Map();
-
-		this.mapMatrix.GenerateNewMap(this.xDimension, this.yDimension);
-
-		// Set up the geometry
-		let boxGeometry = new THREE.BoxGeometry(1, 1, 1);
-		let geometry = new THREE.InstancedBufferGeometry();
-		geometry.fromGeometry(boxGeometry);
-
-		// Set up a colour buffer for the mesh
-		let material = new THREE.MeshPhongMaterial();
-		geometry.setAttribute( 'color', new THREE.InstancedBufferAttribute( this.mapMatrix.colourArray, 3 ) );
-		material.vertexColors = THREE.VertexColors;
-
-		// Set up the final instanced mesh and add to the scene
-		this.mesh = new THREE.InstancedMesh( geometry, material, this.count);
-		this.mesh.instanceMatrix.setUsage( THREE.DynamicDrawUsage ); // will be updated every frame
-		this.scene.add(this.mesh);
-
-		// Iterate through the height map and move instances to fill the generated map
-		const dummy = new THREE.Object3D();
-		let offset = 0;
-
-		for (let i = 0; i < this.mapMatrix.heightMap.length; i++)
+		this.mapMatrix.SaveMap().then(function()
 		{
-			for (let j = 0; j < this.mapMatrix.heightMap[i].length; j++)
-			{			
-				offset++;
-				dummy.position.set(i, this.mapMatrix.heightMap[i][j] / 2, j);
-				dummy.updateMatrix();
-				this.mesh.setMatrixAt( offset, dummy.matrix );
-			}
-		}
-
-		this.mesh.instanceMatrix.needsUpdate = true;
-
-		this.pickHelper = new InstancedObjectPicker(this.mapMatrix, this.scene, this.camera, this.html);
+			console.log("Map Saved");
+		});
 	}
 
 	/*
@@ -227,10 +221,8 @@ class MapScreen
 
 var screen = new MapScreen();
 screen.InitialiseScene();
-screen.CreateNewMap();
-screen.BeginRendering();
-InitialiseEventListeners();
 screen.LoadMap();
+InitialiseEventListeners();
 
 // External event handlers and listeners
 
@@ -293,5 +285,10 @@ function InitialiseEventListeners()
 	document.getElementById("button_delete").addEventListener("click", function()
 	{
 		screen.activeSelectType = SelectTypes.REMOVE;
+	});
+
+	document.getElementById("button_save").addEventListener("click", function()
+	{
+		screen.SaveMap();
 	});
 }
