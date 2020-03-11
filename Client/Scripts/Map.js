@@ -15,13 +15,38 @@ class Map
 		this.GenerateDetailMatrix();
 	}
 
+	/*
+	* Loads values from a retrieved map record into this, allowing for storage of data while maintaining function integrity.
+	* @Param mapRecord The map record retrieved to load and copy values from.
+	*/
 	LoadFromRecord(mapRecord)
 	{
 		this.heightMap = mapRecord.heightMap;
-		this.colourArray = mapRecord.colourArray;
+		this._id = mapRecord._id;
 		this.name = mapRecord.name;
 		this.description = mapRecord.description;
 		this.detailMatrix = mapRecord.detailMatrix;
+
+		this.CopyColourArray(mapRecord.colourArray);
+	}
+
+	/*
+	* Creates a new map, generating a new height map, colour array and detail matrix.
+	* @Param retrievedColourArray The array in the retrieved map record.
+	*/
+	CopyColourArray(retrievedColourArray)
+	{
+		// Retrieve values from the arbitrary object retrieved
+		let valueArray = Object.values(retrievedColourArray);
+
+		// Create a new array with RGB values for every block on the map grid
+		this.colourArray = new Float32Array(valueArray.length);
+
+		// Copy the array into the new generated array
+		for (let i = 0; i < valueArray.length; i++)
+		{
+			this.colourArray[i] = valueArray[i];
+		}
 	}
 
 	/*
