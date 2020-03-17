@@ -69,12 +69,30 @@ function PopulateMapList()
     });
 }
 
-function NewMap()
+function NewMapForm()
+{
+    // Get the modal
+    var modal = document.getElementById("modal");
+    modal.style.display = "block";
+
+    var button = document.getElementById("modal_submit");
+    button.addEventListener('click', function()
+    {
+        modal.style.display = "none";
+
+        let nameValue = document.getElementById("name").value;
+        let descriptionValue = document.getElementById("description").value;
+
+        NewMap(nameValue, descriptionValue);
+    });
+}
+
+function NewMap(name, description)
 {
 	let map = new Map();
 	map.GenerateNewMap(125, 125);
-	map.name = "Test map";
-    map.description = "Test description.";
+	map.name = name;
+    map.description = description;
     
 	let json = JSON.stringify(map);
 
