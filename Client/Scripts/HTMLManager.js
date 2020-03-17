@@ -209,7 +209,7 @@ class HTMLGenerator
 		{
 			// Increase the height value of the corresponding element in the map matrix
 			let value = descriptionForm.value;
-			this.mapScreen.mapMatrix.detailMatrix[matrix.elements[12]][matrix.elements[14]] = value;
+			this.mapScreen.mapMatrix.detailMatrix[this.matrix.x][this.matrix.z] = value;
 		}
 
 		/*
