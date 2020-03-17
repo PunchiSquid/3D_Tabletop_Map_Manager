@@ -13,7 +13,6 @@ class InstancedObjectPicker
 
 		this.pickedHoverObject = null;
 		this.pickedHoverInstance = null;
-		this.hoverMesh = null;
 	}
 
 	/*
@@ -31,12 +30,6 @@ class InstancedObjectPicker
 		{
 			this.pickedHoverObject = null;
 			this.pickedHoverInstance = null;
-			
-			if (this.hoverMesh)
-			{
-				this.scene.remove(this.hoverMesh);
-				this.hoverMesh = null;	
-			}
 		}
 	}
 
@@ -45,10 +38,9 @@ class InstancedObjectPicker
 	* @Param mousePosition The current position of the mouse cursor in the canvas world space.
 	* @Param camera The current active camera in the scene.
 	* @Param clicked Boolean to determine if the mouse was clicked.
-	* @Param brushSize The current size of the brush for adding / removing blocks from the map grid.
 	* @Param activeSelectType The current type of tool being used.
 	*/
-	PickClickedObject(mousePosition, camera, clicked, brushSize, activeSelectType)
+	PickClickedObject(mousePosition, camera, clicked, activeSelectType)
 	{
 		// cast a ray through the frustum
 		this.raycaster.setFromCamera(mousePosition, camera);
@@ -78,31 +70,18 @@ class InstancedObjectPicker
                 }
 				else if (activeSelectType == SelectTypes.CHARACTER)
 				{
-					this.AddCharacter(camera);
+					this.AddCharacter();
 				}
 			}
 		}
-	}
-
-	AddCharacter()
-	{
-		let detail = 
-		{ 
-			instance: this.pickedClickInstance,
-			object: this.pickedClickObject
-		};
-		
-		let event = new CustomEvent("AddCharacter", { detail: detail });
-		document.dispatchEvent(event);
 	}
 
 	/*
 	* Selects an object when the mouse hovers over an object.
 	* @Param mousePosition The current position of the mouse cursor in the canvas world space.
 	* @Param camera The current active camera in the scene.
-	* @Param brushSize The current size of the brush for adding / removing blocks from the map grid.
 	*/
-	PickHoveredObject(mousePosition, camera, brushSize)
+	PickHoveredObject(mousePosition, camera)
 	{
 		// cast a ray through the frustum
 		this.raycaster.setFromCamera(mousePosition, camera);
@@ -110,37 +89,28 @@ class InstancedObjectPicker
 		// get the list of objects the ray intersected
 		const intersectedObjects = this.raycaster.intersectObjects(this.scene.children);
 
+		// If objects have been intersected
 		if (intersectedObjects.length) 
 		{
-			// pick the first contacted object.
-			this.pickedHoverObject = intersectedObjects[0].object;
-			this.pickedHoverInstance = intersectedObjects[0].instanceId;
-
-			if (this.pickedHoverInstance)
-			{
-				// Set a material for the hovering box
-				var hoverMaterial = new THREE.MeshPhongMaterial();
-				hoverMaterial.color = new THREE.Color("red");
-				hoverMaterial.opacity = 0.5;
-				hoverMaterial.transparent = true;
-
-				// Retrieve the instance transformation matrix
-				var matrix = new THREE.Matrix4();
-				this.pickedHoverObject.getMatrixAt(this.pickedHoverInstance, matrix);
-
-				// Retrieve the height value from the map matrix
-				var value = this.map.heightMap[matrix.elements[12]][matrix.elements[14]];
-
-				// Set the dimensions of the cube
-				var hoverBoxGeometry = new THREE.BoxGeometry(brushSize + 0.25, value + 0.25, brushSize + 0.25);
-
-				// Create the mesh, set the position and add to the this.scene
-				this.hoverMesh = new THREE.Mesh( hoverBoxGeometry, hoverMaterial);
-				this.hoverMesh.position.set(matrix.elements[12], matrix.elements[13], matrix.elements[14]);
-
-				this.scene.add(this.hoverMesh);
-			}
+			let detail = { instance: this.pickedClickInstance };
+			let event = new CustomEvent("CursorHover", { detail: detail });
+			document.dispatchEvent(event);
 		}
+	}
+
+	/*
+	* Triggers addition or selection of a character to / on the map
+	*/
+	AddCharacter()
+	{
+		let detail = 
+		{ 
+			instance: this.pickedClickInstance,
+			object: this.pickedClickObject
+		};
+
+		let event = new CustomEvent("AddCharacter", { detail: detail });
+		document.dispatchEvent(event);
 	}
 
 	/*

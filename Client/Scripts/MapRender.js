@@ -77,6 +77,7 @@ class MapScreen
 		document.addEventListener("DrawBlock", this.DrawBlock.bind(this));
 		document.addEventListener("SelectBlock", this.SelectBlock.bind(this));
 		document.addEventListener("AddCharacter", this.AddCharacter.bind(this));
+		document.addEventListener("CursorHover", this.PickHoveredObject.bind(this));
 	}
 
 	/*
@@ -380,6 +381,51 @@ class MapScreen
 	}
 
 	/*
+	* Selects an object when the mouse hovers over an object.
+	*/
+	PickHoveredObject(e)
+	{
+		// Store event variables for shortened code
+		let instance = e.detail.instance;
+
+		if (instance)
+		{
+			// Retrieve the instance transformation matrix
+			let matrix = new THREE.Matrix4();
+			this.mapMesh.getMatrixAt(instance, matrix);
+
+			// Retrieve the height value from the map matrix
+			let value = this.mapMatrix.heightMap[matrix.elements[12]][matrix.elements[14]];
+
+			// Set the dimensions of the cube
+			let hoverBoxGeometry = new THREE.BoxGeometry(this.brushSize + 0.25, value + 0.25, this.brushSize + 0.25);
+
+			// Set a material for the hovering box
+			let hoverMaterial = new THREE.MeshPhongMaterial();
+			hoverMaterial.color = new THREE.Color("red");
+			hoverMaterial.opacity = 0.5;
+			hoverMaterial.transparent = true;
+
+			// Create the mesh, set the position and add to the this.scene
+			this.cursorMesh = new THREE.Mesh( hoverBoxGeometry, hoverMaterial);
+			this.cursorMesh.position.set(matrix.elements[12], matrix.elements[13], matrix.elements[14]);
+
+			this.scene.add(this.cursorMesh);
+		}
+	}
+
+	/*
+	* Helper method to remove temporary objects e.g. the cursor hover object
+	*/
+	ClearTemporaryObjects()
+	{
+		if (this.cursorMesh)
+		{
+			this.scene.remove(this.cursorMesh);
+		}
+	}
+
+	/*
 	* Increases the height of a block in the height map, then re-renders the corresponding instance.
 	* @Param value The value to set to the height map
 	* @Param object The object to set the resultant matrix to
@@ -409,6 +455,9 @@ class MapScreen
 	*/
 	Render(time)
 	{
+		// Clear the cursor mesh if it exists
+		this.ClearTemporaryObjects();
+
 		// Convert time to seconds and then half
 		time *= 0.001;
 		time *= 0.5;
@@ -420,9 +469,9 @@ class MapScreen
 		}
 		
 		this.html.MoveLabel();
-		this.pickHelper.ClearObjects(this.scene);
-		this.pickHelper.PickClickedObject(this.pickPosition, this.camera, this.mouseClicked, this.brushSize, this.activeSelectType);
-		this.pickHelper.PickHoveredObject(this.pickPosition, this.camera, this.brushSize);
+		this.pickHelper.ClearObjects();
+		this.pickHelper.PickClickedObject(this.pickPosition, this.camera, this.mouseClicked, this.activeSelectType);
+		this.pickHelper.PickHoveredObject(this.pickPosition, this.camera);
 		this.mouseClicked = false;
 
 		// Render the current frame and calculate the next frame
