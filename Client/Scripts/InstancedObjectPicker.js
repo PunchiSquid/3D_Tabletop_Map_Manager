@@ -74,7 +74,7 @@ class InstancedObjectPicker
 				}
 				else if (activeSelectType == SelectTypes.SELECT)
 				{
-					this.SelectBlockOnGrid(camera);
+					this.SelectBlock();
                 }
 				else if (activeSelectType == SelectTypes.CHARACTER)
 				{

@@ -74,7 +74,7 @@ class MapScreen
 		controls.target.set(this.xDimension / 2, 0, this.yDimension / 2);
 		controls.update();
 
-		document.addEventListener("DrawBlock", this.ChangeBlock.bind(this));
+		document.addEventListener("DrawBlock", this.DrawBlock.bind(this));
 		document.addEventListener("SelectBlock", this.SelectBlock.bind(this));
 	}
 
@@ -181,7 +181,7 @@ class MapScreen
 	/*
 	* Modifies the height of a block incrementally or decrementally in the heightmap and then modifies the associated instance matrix to re-render it.
 	*/
-	ChangeBlock(e)
+	DrawBlock(e)
 	{
 		// Store event variables for shortened code
 		let object = this.mesh;
@@ -264,22 +264,26 @@ class MapScreen
 		let object = this.mesh;
 		let instance = e.detail.instance;
 
+		// Only select a block if an instance exists
 		if (instance)
 		{
 			// Retrieve the transformation matrix for the clicked instance
 			let matrix = new THREE.Matrix4();
 			object.getMatrixAt(instance, matrix);
 
-			var dummy = new THREE.Object3D();
-			var tempVector = new THREE.Vector3();
+			// Retrieve the world position projected from the camera
+			let dummy = new THREE.Object3D();
+			let tempVector = new THREE.Vector3();
 			dummy.position.set(matrix.elements[12], matrix.elements[13], matrix.elements[14]);
 			dummy.updateMatrix();
 			dummy.getWorldPosition(tempVector);
 			tempVector.project(this.camera);
 
+			// Get screen space for placing HTML elements
 			let x = (tempVector.x *  .5 + .5) * this.canvas.clientWidth;
 			let y = (tempVector.y * -.5 + .5) * this.canvas.clientHeight;
 
+			// Add a label
 			this.html.AddLabel(x, y, object, instance);
 		}
 	}
