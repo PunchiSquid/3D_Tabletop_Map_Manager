@@ -207,33 +207,17 @@ class InstancedObjectPicker
 	AddValueToBlock()
 	{
 		let detail = { instance: this.pickedClickInstance };
-		let event = new CustomEvent("AddBlock", { detail: detail });
+		let event = new CustomEvent("DrawBlock", { detail: detail });
 		document.dispatchEvent(event);
     }
 
 	/*
-	* Selects a block on the grid, adding a HTML element to the area.
-	* @Param camera The current active camera in the scene.
+	* Triggers selection of a block on the grid, adding a HTML element to the area.
 	*/
-	SelectBlockOnGrid(camera)
+	SelectBlock()
 	{
-		if (this.pickedClickInstance)
-		{
-			// Retrieve the transformation matrix for the clicked instance
-			var originalMatrix = new THREE.Matrix4();
-			this.pickedClickObject.getMatrixAt(this.pickedClickInstance, originalMatrix);
-
-			var dummy = new THREE.Object3D();
-			var tempVector = new THREE.Vector3();
-			dummy.position.set(originalMatrix.elements[12], originalMatrix.elements[13], originalMatrix.elements[14]);
-			dummy.updateMatrix();
-			dummy.getWorldPosition(tempVector);
-			tempVector.project(camera);
-
-			let x = (tempVector.x *  .5 + .5) * this.canvas.clientWidth;
-			let y = (tempVector.y * -.5 + .5) * this.canvas.clientHeight;
-
-			this.html.AddLabel(x, y, this.pickedClickObject, this.pickedClickInstance);
-		}
+		let detail = { instance: this.pickedClickInstance };
+		let event = new CustomEvent("SelectBlock", { detail: detail });
+		document.dispatchEvent(event);
 	}
 }

@@ -74,7 +74,8 @@ class MapScreen
 		controls.target.set(this.xDimension / 2, 0, this.yDimension / 2);
 		controls.update();
 
-		document.addEventListener("AddBlock", this.ChangeBlock.bind(this));
+		document.addEventListener("DrawBlock", this.ChangeBlock.bind(this));
+		document.addEventListener("SelectBlock", this.SelectBlock.bind(this));
 	}
 
 	/*
@@ -250,6 +251,36 @@ class MapScreen
 					else { modifyHeight(); }
 				}
 			}
+		}
+	}
+
+	/*
+	* Selects a block on the grid, adding a HTML element to the area.
+	* @Param camera The current active camera in the scene.
+	*/
+	SelectBlock(e)
+	{
+		// Store event variables for shortened code
+		let object = this.mesh;
+		let instance = e.detail.instance;
+
+		if (instance)
+		{
+			// Retrieve the transformation matrix for the clicked instance
+			let matrix = new THREE.Matrix4();
+			object.getMatrixAt(instance, matrix);
+
+			var dummy = new THREE.Object3D();
+			var tempVector = new THREE.Vector3();
+			dummy.position.set(matrix.elements[12], matrix.elements[13], matrix.elements[14]);
+			dummy.updateMatrix();
+			dummy.getWorldPosition(tempVector);
+			tempVector.project(this.camera);
+
+			let x = (tempVector.x *  .5 + .5) * this.canvas.clientWidth;
+			let y = (tempVector.y * -.5 + .5) * this.canvas.clientHeight;
+
+			this.html.AddLabel(x, y, object, instance);
 		}
 	}
 
