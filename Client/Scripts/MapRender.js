@@ -2,7 +2,8 @@ SelectTypes =
 {
 	SELECT: "select",
 	ADD: "add",
-	REMOVE: "remove"
+	REMOVE: "remove",
+	CHARACTER: "character"
 };
 
 class MapScreen
@@ -88,17 +89,23 @@ class MapScreen
 		{
 			// Set up the geometry
 			let boxGeometry = new THREE.BoxGeometry(1, 1, 1);
-			let geometry = new THREE.InstancedBufferGeometry();
-			geometry.fromGeometry(boxGeometry);
+			let instancedGeometry = new THREE.InstancedBufferGeometry();
+			instancedGeometry.fromGeometry(boxGeometry);
+
+			let hoverBoxGeometry = new THREE.CylinderGeometry( 0.5, 0.5, 2, 8 );
+			let hoverMaterial = new THREE.MeshPhongMaterial();
+			hoverMaterial.color = new THREE.Color("red");
+			hoverMaterial.opacity = 0.75;
+			hoverMaterial.transparent = true;
 
 			// Set up a colour buffer for the mesh
 			let material = new THREE.MeshPhongMaterial();
-			geometry.setAttribute( 'color', new THREE.InstancedBufferAttribute( this.mapMatrix.colourArray, 3 ) );
+			instancedGeometry.setAttribute( 'color', new THREE.InstancedBufferAttribute( this.mapMatrix.colourArray, 3 ) );
 
 			material.vertexColors = THREE.VertexColors;
 
 			// Set up the final instanced mesh and add to the scene
-			this.mesh = new THREE.InstancedMesh( geometry, material, this.count);
+			this.mesh = new THREE.InstancedMesh( instancedGeometry, material, this.count);
 			this.mesh.instanceMatrix.setUsage( THREE.DynamicDrawUsage ); // will be updated every frame
 			this.scene.add(this.mesh);
 
@@ -114,6 +121,15 @@ class MapScreen
 					offset++;
 					this.mesh.getMatrixAt(offset, matrix);
 					let value = this.mapMatrix.heightMap[i][j];
+
+					if (this.mapMatrix.GetCharacter(i, j) != null)
+					{
+						let characterMesh = new THREE.Mesh( hoverBoxGeometry, hoverMaterial);
+						characterMesh.position.x = i;
+						characterMesh.position.z = j;
+						characterMesh.position.y = value + 1;
+						this.scene.add(characterMesh);
+					}
 
 					dummy.position.set(i, value / 2, j);
 					dummy.updateMatrix();
@@ -203,7 +219,7 @@ class MapScreen
 		this.pickHelper.PickClickedObject(this.pickPosition, this.camera, this.mouseClicked, this.brushSize, this.activeSelectType);
 		this.pickHelper.PickHoveredObject(this.pickPosition, this.camera, this.brushSize);
 		this.mouseClicked = false;
-		
+
 		// Render the current frame and calculate the next frame
 		this.renderer.render(this.scene, this.camera);	
 		requestAnimationFrame(this.render);
@@ -285,6 +301,11 @@ function InitialiseEventListeners()
 	document.getElementById("button_delete").addEventListener("click", function()
 	{
 		screen.activeSelectType = SelectTypes.REMOVE;
+	});
+
+	document.getElementById("button_character").addEventListener("click", function()
+	{
+		screen.activeSelectType = SelectTypes.CHARACTER;
 	});
 
 	document.getElementById("button_save").addEventListener("click", function()

@@ -5,6 +5,7 @@ class HTMLGenerator
 		this.labelContainer = document.querySelector('#labels');
 		this.currentLabelObject = null;
 		this.currentLabelLocation = null;
+		this.matrix = null;
         this.newLabel = null;
         this.mapScreen = mapScreen;
 	}
@@ -22,7 +23,118 @@ class HTMLGenerator
 
 		this.currentLabelObject = null;
 		this.currentLabelLocation = null;
+		this.matrix = null;
 		this.newLabel = null;
+	}
+
+	AddCharacterLabel(x, y, matrix)
+	{
+		// Clear the existing labels
+		this.RemoveLabels();
+
+		this.matrix = matrix;
+
+		let nameValue = this.mapScreen.mapMatrix.characterMatrix[this.matrix.x][this.matrix.z].name;
+		let notesValue = this.mapScreen.mapMatrix.characterMatrix[this.matrix.x][this.matrix.z].notes;
+
+		// Create a new label div
+		this.newLabel = document.createElement("div");
+
+		// Create a new header and set the inner text
+		let nameTitle = document.createElement("p");
+		nameTitle.textContent = "Name";
+		nameTitle.style = "display: inline-block; padding-right: 10px;";
+
+		let notesTitle = document.createElement("p");
+		notesTitle.textContent = "Notes";
+
+		let nameForm = document.createElement("input");
+		nameForm.setAttribute("type", "text");
+		nameForm.setAttribute("min", "1");
+		nameForm.setAttribute("value", nameValue);
+		nameForm.style = "display: inline-block";
+
+		let notesForm = document.createElement("textarea");
+		notesForm.value = notesValue;
+
+		let closeButton = document.createElement("input");
+		closeButton.setAttribute("type", "button");
+		closeButton.setAttribute("value", "Close");
+
+		let deleteButton = document.createElement("input");
+		deleteButton.setAttribute("type", "button");
+		deleteButton.setAttribute("value", "Delete");
+
+		/*
+		* Internal function for modifying block height when number field is modified.
+		*/
+		const nameModFunction = function()
+		{
+			let value = nameForm.value;
+			this.mapScreen.mapMatrix.characterMatrix[this.matrix.x][this.matrix.z].name = value;
+		}
+
+		/*
+		* Internal function for modifying block description when the text area is modified.
+		*/
+		const notesModFunction = function()
+		{
+			// Increase the height value of the corresponding element in the map matrix
+			let value = notesForm.value;
+			this.mapScreen.mapMatrix.characterMatrix[this.matrix.x][this.matrix.z].notes = value;
+		}
+
+		/*
+		* Internal function for modifying block description when the text area is modified.
+		*/
+		const deleteCharacterFunction = function()
+		{
+			// Increase the height value of the corresponding element in the map matrix
+			let value = notesForm.value;
+			this.mapScreen.mapMatrix.characterMatrix[this.matrix.x][this.matrix.z] = null;
+
+			let count = this.mapScreen.scene.children.length;
+
+			for (let i = 0; i < count; i++)
+			{
+				let element = this.mapScreen.scene.children[i];
+
+				if (element != null && element.position.x == this.matrix.x && element.position.z == this.matrix.z)
+				{
+					this.mapScreen.scene.remove(element);
+					break;
+				}
+			}
+
+			this.RemoveLabels();
+		}
+
+		/*
+		* Internal function for closing labels when the close button is clicked.
+		*/
+		const closeLabelFunction = function()
+		{
+			this.RemoveLabels();
+		}
+
+		// Register event listeners for label HTML interactions.
+		nameForm.addEventListener('input', nameModFunction.bind(this));
+		notesForm.addEventListener('input', notesModFunction.bind(this));
+		closeButton.addEventListener('mousedown', closeLabelFunction.bind(this));
+		deleteButton.addEventListener('mousedown', deleteCharacterFunction.bind(this));
+		
+
+		// Append the new label to the label container
+		this.labelContainer.appendChild(this.newLabel);
+		this.newLabel.appendChild(nameTitle);
+		this.newLabel.appendChild(nameForm);
+		this.newLabel.appendChild(notesTitle);
+		this.newLabel.appendChild(notesForm);
+		this.newLabel.appendChild(closeButton);
+		this.newLabel.appendChild(deleteButton);
+
+		// Transform the new element with CSS
+		this.newLabel.style.transform = `translate(-50%, -50%) translate(${x}px,${y}px)`;
 	}
 
 	/*
@@ -41,10 +153,21 @@ class HTMLGenerator
 		this.currentLabelObject = currentLabelObject;
 		this.currentLabelLocation = currentLabelLocation;
 
-		var originalMatrix = new THREE.Matrix4();
-		this.currentLabelObject.getMatrixAt(this.currentLabelLocation, originalMatrix);
-		let heightValue = this.mapScreen.mapMatrix.heightMap[originalMatrix.elements[12]][originalMatrix.elements[14]];
-		let descriptionValue = this.mapScreen.mapMatrix.detailMatrix[originalMatrix.elements[12]][originalMatrix.elements[14]]
+		// Retrieve the transformation matrix for the clicked instance
+		var retrievedMatrix = new THREE.Matrix4();
+		this.currentLabelObject.getMatrixAt(this.currentLabelLocation, retrievedMatrix);
+
+		var matrix = 
+		{
+			x: retrievedMatrix.elements[12],
+			y: retrievedMatrix.elements[13],
+			z: retrievedMatrix.elements[14]
+		};
+
+		this.matrix = matrix;
+
+		let heightValue = this.mapScreen.mapMatrix.heightMap[this.matrix.x][this.matrix.z];
+		let descriptionValue = this.mapScreen.mapMatrix.detailMatrix[this.matrix.x][this.matrix.z]
 
 
 		// Create a new label div
@@ -84,10 +207,6 @@ class HTMLGenerator
 		*/
 		const descriptionModFunction = function()
 		{
-			// Retrieve the transformation matrix for the clicked instance
-			var matrix = new THREE.Matrix4();
-			this.currentLabelObject.getMatrixAt(this.currentLabelLocation, matrix);
-
 			// Increase the height value of the corresponding element in the map matrix
 			let value = descriptionForm.value;
 			this.mapScreen.mapMatrix.detailMatrix[matrix.elements[12]][matrix.elements[14]] = value;
@@ -124,15 +243,11 @@ class HTMLGenerator
 	*/
 	MoveLabel()
 	{
-		if (this.currentLabelObject && this.currentLabelLocation)
+		if (this.matrix)
 		{
-			// Retrieve the transformation matrix for the clicked instance
-			var originalMatrix = new THREE.Matrix4();
-			this.currentLabelObject.getMatrixAt(this.currentLabelLocation, originalMatrix);
-
 			var dummy = new THREE.Object3D();
 			var tempVector = new THREE.Vector3();
-			dummy.position.set(originalMatrix.elements[12], 0, originalMatrix.elements[14]);
+			dummy.position.set(this.matrix.x, 0, this.matrix.z);
 			dummy.updateMatrix();
 			dummy.getWorldPosition(tempVector);
 			tempVector.project(this.mapScreen.camera);
