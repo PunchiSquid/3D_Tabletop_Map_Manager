@@ -91,6 +91,7 @@ class InstancedObjectPicker
 			instance: this.pickedClickInstance,
 			object: this.pickedClickObject
 		};
+		
 		let event = new CustomEvent("AddCharacter", { detail: detail });
 		document.dispatchEvent(event);
 	}

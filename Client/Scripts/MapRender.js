@@ -92,60 +92,61 @@ class MapScreen
 		this.mapMatrix = new Map();
 		this.mapMatrix.LoadMap(id).then(function() 
 		{
-			// Set up the geometry
+			// Set up the instanced box geometry
 			let boxGeometry = new THREE.BoxGeometry(1, 1, 1);
 			let instancedGeometry = new THREE.InstancedBufferGeometry();
 			instancedGeometry.fromGeometry(boxGeometry);
 
-			var hoverBoxGeometry = new THREE.CylinderGeometry( 0.75, 0, 2, 8 );
-			let hoverMaterial = new THREE.MeshPhongMaterial();
-			hoverMaterial.color = new THREE.Color("red");
-			hoverMaterial.opacity = 0.75;
-			hoverMaterial.transparent = true;
-
-			// Set up a colour buffer for the mesh
-			let material = new THREE.MeshPhongMaterial();
+			// Set up a colour buffer for the box mesh
+			let instancedMaterial = new THREE.MeshPhongMaterial();
 			instancedGeometry.setAttribute( 'color', new THREE.InstancedBufferAttribute( this.mapMatrix.colourArray, 3 ) );
-
-			material.vertexColors = THREE.VertexColors;
+			instancedMaterial.vertexColors = THREE.VertexColors;
 
 			// Set up the final instanced mesh and add to the scene
-			this.mesh = new THREE.InstancedMesh( instancedGeometry, material, this.count);
-			this.mesh.instanceMatrix.setUsage( THREE.DynamicDrawUsage ); // will be updated every frame
-			this.scene.add(this.mesh);
+			this.mapMesh = new THREE.InstancedMesh( instancedGeometry, instancedMaterial, this.count);
+			this.mapMesh.instanceMatrix.setUsage( THREE.DynamicDrawUsage ); // will be updated every frame
+			this.scene.add(this.mapMesh);
+
+			// Set up the character cylinder geometry and material
+			var characterGeometry = new THREE.CylinderGeometry( 0.75, 0, 2, 8 );
+			let characterMaterial = new THREE.MeshPhongMaterial();
+			characterMaterial.color = new THREE.Color("red");
+			characterMaterial.opacity = 0.75;
+			characterMaterial.transparent = true;
 
 			// Iterate through the height map and move instances to fill the generated map
-			let matrix = new THREE.Matrix4();
-			let offset = 0;
+			const matrix = new THREE.Matrix4();
 			const dummy = new THREE.Object3D();
+			let offset = 0;
 
 			for (let i = 0; i < this.mapMatrix.heightMap.length; i++)
 			{
 				for (let j = 0; j < this.mapMatrix.heightMap[i].length; j++)
-				{			
+				{
+					// Retrieve each instance transformation matrix
 					offset++;
-					this.mesh.getMatrixAt(offset, matrix);
+					this.mapMesh.getMatrixAt(offset, matrix);
 					let value = this.mapMatrix.heightMap[i][j];
 
-					if (this.mapMatrix.GetCharacter(i, j) != null)
-					{
-						let characterMesh = new THREE.Mesh( hoverBoxGeometry, hoverMaterial);
-						characterMesh.position.x = i;
-						characterMesh.position.z = j;
-						characterMesh.position.y = value + 1.25;
-						this.scene.add(characterMesh);
-					}
-
+					// Set a dummy object position to transform the instance being modified
 					dummy.position.set(i, value / 2, j);
 					dummy.updateMatrix();
 					dummy.matrix.elements[5] = value;
 					dummy.matrix.elements[13] = value / 2;
-					this.mesh.setMatrixAt( offset, dummy.matrix );
+					this.mapMesh.setMatrixAt( offset, dummy.matrix );
+
+					// If a character is present on a space, add a character token to that space in the render
+					if (this.mapMatrix.GetCharacter(i, j) != null)
+					{
+						let characterMesh = new THREE.Mesh( characterGeometry, characterMaterial);
+						characterMesh.position.set(i, value + 1.25, j);
+						this.scene.add(characterMesh);
+					}
 				}
 			}
 
 			// Flag the matrix for updating
-			this.mesh.instanceMatrix.needsUpdate = true;
+			this.mapMesh.instanceMatrix.needsUpdate = true;
 
 			// Create a new helper class to assist in raycasting and object picking, then begin the render cycle
 			this.pickHelper = new InstancedObjectPicker(this.mapMatrix, this.scene, this.camera, this.html);
@@ -185,7 +186,7 @@ class MapScreen
 	DrawBlock(e)
 	{
 		// Store event variables for shortened code
-		let object = this.mesh;
+		let object = this.mapMesh;
 		let instance = e.detail.instance;
 
 		// Internal function to increment the height of selected blocks
@@ -261,7 +262,7 @@ class MapScreen
 	SelectBlock(e)
 	{
 		// Store event variables for shortened code
-		let object = this.mesh;
+		let object = this.mapMesh;
 		let instance = e.detail.instance;
 
 		// Only select a block if an instance exists
