@@ -76,6 +76,7 @@ class MapScreen
 
 		document.addEventListener("DrawBlock", this.DrawBlock.bind(this));
 		document.addEventListener("SelectBlock", this.SelectBlock.bind(this));
+		document.addEventListener("AddCharacter", this.AddCharacter.bind(this));
 	}
 
 	/*
@@ -96,7 +97,7 @@ class MapScreen
 			let instancedGeometry = new THREE.InstancedBufferGeometry();
 			instancedGeometry.fromGeometry(boxGeometry);
 
-			let hoverBoxGeometry = new THREE.CylinderGeometry( 0.5, 0.5, 2, 8 );
+			var hoverBoxGeometry = new THREE.CylinderGeometry( 0.75, 0, 2, 8 );
 			let hoverMaterial = new THREE.MeshPhongMaterial();
 			hoverMaterial.color = new THREE.Color("red");
 			hoverMaterial.opacity = 0.75;
@@ -131,7 +132,7 @@ class MapScreen
 						let characterMesh = new THREE.Mesh( hoverBoxGeometry, hoverMaterial);
 						characterMesh.position.x = i;
 						characterMesh.position.z = j;
-						characterMesh.position.y = value + 1;
+						characterMesh.position.y = value + 1.25;
 						this.scene.add(characterMesh);
 					}
 
@@ -256,7 +257,6 @@ class MapScreen
 
 	/*
 	* Selects a block on the grid, adding a HTML element to the area.
-	* @Param camera The current active camera in the scene.
 	*/
 	SelectBlock(e)
 	{
@@ -285,6 +285,96 @@ class MapScreen
 
 			// Add a label
 			this.html.AddLabel(x, y, object, instance);
+		}
+	}
+
+	/*
+	* Adds or selects a character to / on the map
+	*/
+	AddCharacter(e)
+	{
+		// Store event variables for shortened code
+		let object = e.detail.object;
+		let instance = e.detail.instance;
+
+		// If the selected object is an instance of the grid blocks
+		if (!instance)
+		{
+			// Retrieve the transformation matrix for the clicked instance
+			let matrix = new THREE.Matrix4();
+			matrix = object.position;
+
+			// Retrieve the world position projected from the camera
+			let dummy = new THREE.Object3D();
+			let tempVector = new THREE.Vector3();
+			dummy.position.set(matrix.x, matrix.y, matrix.z);
+			dummy.updateMatrix();
+			dummy.getWorldPosition(tempVector);
+			tempVector.project(this.camera);
+
+			// Get screen space for placing HTML elements
+			let x = (tempVector.x *  .5 + .5) * this.canvas.clientWidth;
+			let y = (tempVector.y * -.5 + .5) * this.canvas.clientHeight;
+
+			// Add a label
+			this.html.AddCharacterLabel(x, y, matrix);
+		}
+
+		// If the selected object is a character
+		else
+		{
+			// Retrieve position
+			let matrix = new THREE.Matrix4();
+			object.getMatrixAt(instance, matrix);
+
+			// Produce a JSON transformation matrix for the clicked object
+			let locationMatrix = 
+			{
+				x: matrix.elements[12],
+				y: matrix.elements[13],
+				z: matrix.elements[14]
+			}
+
+			// If a character is not present, create a new one
+			if (this.mapMatrix.GetCharacter(locationMatrix.x, locationMatrix.z) == null)
+			{
+				// Set a material for the hovering box
+				let hoverMaterial = new THREE.MeshPhongMaterial();
+				hoverMaterial.color = new THREE.Color("red");;
+				hoverMaterial.opacity = 0.7;
+				hoverMaterial.transparent = true;
+
+				// Retrieve the height value from the map matrix
+				let value = this.mapMatrix.heightMap[locationMatrix.x][locationMatrix.z];
+
+				// Set character in the map
+				this.mapMatrix.AddCharacter(locationMatrix.x, locationMatrix.z);
+
+				// Set the dimensions of the cube
+				let hoverBoxGeometry = new THREE.CylinderGeometry( 0.75, 0, 2, 8 );
+
+				// Create the mesh, set the position and add to the this.scene
+				let characterMesh = new THREE.Mesh( hoverBoxGeometry, hoverMaterial);
+				characterMesh.position.set(locationMatrix.x, value + 1.25, locationMatrix.z);
+
+				// Add to the scene
+				this.scene.add(characterMesh);
+			}
+
+			// Retrieve the world position projected from the camera
+			let dummy = new THREE.Object3D();
+			let tempVector = new THREE.Vector3();
+			dummy.position.set(locationMatrix.x, locationMatrix.y, locationMatrix.z);
+			dummy.updateMatrix();
+			dummy.getWorldPosition(tempVector);
+			tempVector.project(this.camera);
+
+			// Get screen space for placing HTML elements
+			let x = (tempVector.x *  .5 + .5) * this.canvas.clientWidth;
+			let y = (tempVector.y * -.5 + .5) * this.canvas.clientHeight;
+
+			// Add a label
+			this.html.AddCharacterLabel(x, y, locationMatrix);
 		}
 	}
 

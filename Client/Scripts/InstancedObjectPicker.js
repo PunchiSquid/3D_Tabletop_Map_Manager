@@ -84,74 +84,15 @@ class InstancedObjectPicker
 		}
 	}
 
-	AddCharacter(camera)
+	AddCharacter()
 	{
-		if (!this.pickedClickInstance)
-		{
-			var matrix = new THREE.Matrix4();
-			matrix = this.pickedClickObject.position;
-
-			var dummy = new THREE.Object3D();
-			var tempVector = new THREE.Vector3();
-			dummy.position.set(matrix.x, matrix.y, matrix.z);
-			dummy.updateMatrix();
-			dummy.getWorldPosition(tempVector);
-			tempVector.project(camera);
-
-			let x = (tempVector.x *  .5 + .5) * this.canvas.clientWidth;
-			let y = (tempVector.y * -.5 + .5) * this.canvas.clientHeight;
-
-			this.html.AddCharacterLabel(x, y, matrix);
-		}
-		else
-		{
-			var retrievedMatrix = new THREE.Matrix4();
-			this.pickedClickObject.getMatrixAt(this.pickedClickInstance, retrievedMatrix);
-
-			var matrix = 
-			{
-				x: retrievedMatrix.elements[12],
-				y: retrievedMatrix.elements[13],
-				z: retrievedMatrix.elements[14]
-			}
-
-			var dummy = new THREE.Object3D();
-			var tempVector = new THREE.Vector3();
-			dummy.position.set(matrix.x, matrix.y, matrix.z);
-			dummy.updateMatrix();
-			dummy.getWorldPosition(tempVector);
-			tempVector.project(camera);
-
-			if (this.map.GetCharacter(matrix.x, matrix.z) == null)
-			{
-				// Set a material for the hovering box
-				var hoverMaterial = new THREE.MeshPhongMaterial();
-				hoverMaterial.color = new THREE.Color("red");;
-				hoverMaterial.opacity = 0.7;
-				hoverMaterial.transparent = true;
-
-				// Retrieve the height value from the map matrix
-				var value = this.map.heightMap[retrievedMatrix.elements[12]][retrievedMatrix.elements[14]];
-
-				// Set character in the map
-				this.map.AddCharacter(retrievedMatrix.elements[12], retrievedMatrix.elements[14]);
-
-				// Set the dimensions of the cube
-				var hoverBoxGeometry = new THREE.CylinderGeometry( 0.5, 0.5, 2, 8 );
-
-				// Create the mesh, set the position and add to the this.scene
-				let characterMesh = new THREE.Mesh( hoverBoxGeometry, hoverMaterial);
-				characterMesh.position.set(retrievedMatrix.elements[12], value + 1, retrievedMatrix.elements[14]);
-				characterMesh.type = "Character";
-
-				this.scene.add(characterMesh);
-			}
-
-			let x = (tempVector.x *  .5 + .5) * this.canvas.clientWidth;
-			let y = (tempVector.y * -.5 + .5) * this.canvas.clientHeight;
-
-			this.html.AddCharacterLabel(x, y, matrix);
-		}
+		let detail = 
+		{ 
+			instance: this.pickedClickInstance,
+			object: this.pickedClickObject
+		};
+		let event = new CustomEvent("AddCharacter", { detail: detail });
+		document.dispatchEvent(event);
 	}
 
 	/*
