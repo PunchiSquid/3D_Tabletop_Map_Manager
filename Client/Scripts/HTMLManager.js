@@ -221,7 +221,7 @@ class HTMLGenerator
 		}
 
 		// Register event listeners for label HTML interactions.
-		heightForm.addEventListener('change', heightModFunction.bind(this));
+		heightForm.addEventListener('input', heightModFunction.bind(this));
 		descriptionForm.addEventListener('input', descriptionModFunction.bind(this));
 		closeButton.addEventListener('mousedown', closeLabelFunction.bind(this));
 		
