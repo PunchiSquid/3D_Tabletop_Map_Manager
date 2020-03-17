@@ -13,6 +13,8 @@ class Map
 		this.GenerateHeightMap();
 		this.GenerateColourBufferArray();
 		this.GenerateDetailMatrix();
+
+		this.GenerateCharacterMatrix();
 	}
 
 	/*
@@ -99,6 +101,7 @@ class Map
 		this.mapYDimension = mapRecord.mapYDimension;
 		this.heightMap = mapRecord.heightMap;
 		this.detailMatrix = mapRecord.detailMatrix;
+		this.characterMatrix = mapRecord.characterMatrix;
 
 		this.CopyColourArray(mapRecord.colourArray);
 	}
@@ -173,6 +176,20 @@ class Map
 	}
 
 	/*
+	* Generates an empty matrix for descriptive details.
+	*/
+	GenerateCharacterMatrix()
+	{
+		this.characterMatrix = new Array(this.mapXDimension);
+
+		for (let i = 0; i < this.characterMatrix.length; i++)
+		{
+			let column = new Array(this.mapYDimension);
+			this.characterMatrix[i] = column;
+		}
+	}
+
+	/*
 	* Adds to the height map value at the specified location on the heightmap, 
 	* then returns the resultant value.
 	* @Param x The X index on the matrix.
@@ -193,5 +210,19 @@ class Map
 		}
 
 		return this.heightMap[x][y];
+	}
+
+	AddCharacter(x, y)
+	{
+		if (this.characterMatrix[x][y] == null)
+		{
+			let character = new Character();
+			this.characterMatrix[x][y] = character;
+		}
+	}
+
+	GetCharacter(x, y)
+	{
+		return this.characterMatrix[x][y];
 	}
 }
