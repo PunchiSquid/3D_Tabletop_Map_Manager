@@ -182,3 +182,57 @@
     width: 25%;
     height: 100%;
 }
+
+/* Modal Header */
+.my-modal-header 
+{
+	text-align: center;
+	padding: 2px 16px;
+	background-color: #5cb85c;
+	color: white;
+}
+
+.my-modal-header>h2
+{
+	width: 100%;
+}
+  
+/* Modal Body */
+.my-modal-body 
+{
+	text-align: center;
+	padding: 2px 16px;
+}
+  
+/* Modal Footer */
+.my-modal-footer 
+{
+	padding: 2px 16px;
+	background-color: #5cb85c;
+	color: white;
+}
+
+/* Modal Content */
+.my-modal-content 
+{
+	display: none;
+	position: fixed;
+	top: 25%;
+	left: 37.5%;
+	background-color: #fefefe;
+	z-index: 2;
+	margin: auto;
+	padding: 0;
+	border: 1px solid #888;
+	width: 25%;
+	box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2),0 6px 20px 0 rgba(0,0,0,0.19);
+	animation-name: animatetop;
+	animation-duration: 0.4s
+}
+  
+/* Add Animation */
+@keyframes animatetop 
+{
+	from {top: -300px; opacity: 0}
+	to {top: 25%; opacity: 1}
+}

@@ -12,6 +12,7 @@
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.min.js"></script>
 	<link href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
 	<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+
 	
 	<!-- Internal Scripts -->
     <script src="Map.js"></script>
@@ -24,8 +25,23 @@
 
 <body>
     <canvas class="dice_canvas" id="c"></canvas>    
-    <button id="newButton" onclick="NewMap()">New Map</button>
-    <div id="map_list"></div>
+    <button id="newButton" onclick="NewMapForm()">New Map</button>
+	<div id="map_list"></div>
+	
+	<!-- Modal content -->
+	<div id="modal" class="my-modal-content">
+		<div class="my-modal-header">
+			<h2>Enter Map Details</h2>
+		</div>
+		<div class="my-modal-body">
+			<p>Name</p>
+			<input type="text" id="name" name="name"><br>
+			<p>Description:</p>
+			<textarea id="description" name="description"></textarea><br><br>
+			<button id="modal_submit">Create Map</button>
+		</div>
+	</div>
+
 </body>
 
 <script src="LoginBackdrop.js"></script>

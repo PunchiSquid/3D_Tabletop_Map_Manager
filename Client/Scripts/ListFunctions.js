@@ -3,11 +3,6 @@ $(document).ready(function()
 	PopulateMapList();
 });
 
-function LoadMap(mapID)
-{
-    return null;
-}
-
 function PopulateMapList()
 {
     let container = document.querySelector('#map_list');
@@ -71,5 +66,52 @@ function PopulateMapList()
                 console.log(editButton.value);
             });
         }
+    });
+}
+
+function NewMapForm()
+{
+    // Get the modal
+    var modal = document.getElementById("modal");
+    modal.style.display = "block";
+
+    var button = document.getElementById("modal_submit");
+    button.addEventListener('click', function()
+    {
+        modal.style.display = "none";
+
+        let nameValue = document.getElementById("name").value;
+        let descriptionValue = document.getElementById("description").value;
+
+        NewMap(nameValue, descriptionValue);
+    });
+}
+
+function NewMap(name, description)
+{
+	let map = new Map();
+	map.GenerateNewMap(125, 125);
+	map.name = name;
+    map.description = description;
+    
+	let json = JSON.stringify(map);
+
+	let object = 
+	{
+		"map": json,
+	};
+
+    var request = $.post("/maps", object);
+
+    // Upon success log to the console
+    request.done(function(data, status)
+    {
+        window.location.href = "/editor/" + data;
+    });
+
+    // Upon failure reject the promise
+    request.fail(function(errorObject, string, errorString)
+    {
+        console.log(errorString);
     });
 }
