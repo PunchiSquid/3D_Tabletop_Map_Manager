@@ -66,11 +66,11 @@ class InstancedObjectPicker
 			{
 				if (activeSelectType == SelectTypes.ADD)
 				{
-					this.AddBlockToGrid();
+					this.AddValueToBlock();
 				}
 				else if (activeSelectType == SelectTypes.REMOVE)
                 {
-                    this.RemoveBlockFromGrid(brushSize);
+                    this.AddValueToBlock();
 				}
 				else if (activeSelectType == SelectTypes.SELECT)
 				{
@@ -202,120 +202,14 @@ class InstancedObjectPicker
 	}
 
 	/*
-	* Adds a block to the map grid.
+	* Triggers addition of a value to a block on the map grid.
 	*/
-	AddBlockToGrid()
+	AddValueToBlock()
 	{
-		let detail = 
-		{
-			instance: this.pickedClickInstance
-		};
-
+		let detail = { instance: this.pickedClickInstance };
 		let event = new CustomEvent("AddBlock", { detail: detail });
 		document.dispatchEvent(event);
     }
-	
-	/*
-	* Removes a block from the map grid.
-	* @Param brushSize The current size of the brush for adding / removing blocks from the map grid.
-	*/
-    RemoveBlockFromGrid(brushSize)
-	{
-		// Create a new colour
-		var newColour = new THREE.Color("green");
-
-		// Retrieve the transformation matrix for the clicked instance
-		var originalMatrix = new THREE.Matrix4();
-		this.pickedClickObject.getMatrixAt(this.pickedClickInstance, originalMatrix);
-
-		for (let i = -Math.floor(brushSize / 2); i <= Math.floor(brushSize / 2); i++)
-		{
-			for (let j = -Math.floor(brushSize / 2); j <= Math.floor(brushSize / 2); j++)
-			{
-				// Retrieve the transformation matrix for the clicked instance
-				var matrix = new THREE.Matrix4();
-				this.pickedClickObject.getMatrixAt(this.pickedClickInstance + (i + (j * this.map.mapXDimension)), matrix);
-
-				if (matrix.elements[14] != null)
-				{
-					if (i < 0)
-					{
-						if (matrix.elements[14] < originalMatrix.elements[14])
-						{
-							// Set the new colour to the corresponding block
-							newColour.toArray( this.map.colourArray, (this.pickedClickInstance + (i + (j * this.map.mapXDimension))) * 3 );
-
-                            var value = this.map.heightMap[matrix.elements[12]][matrix.elements[14]];
-
-							if (value > 1)
-                            {
-                                // Increase the height value of the corresponding element in the map matrix
-                                this.map.heightMap[matrix.elements[12]][matrix.elements[14]] -= 1;
-                                value = this.map.heightMap[matrix.elements[12]][matrix.elements[14]];
-
-                                // Set corresponding values in the transformation matrix for the instance
-                                matrix.elements[5] = value;
-                                matrix.elements[13] = value / 2;
-                            }
-
-							// Set the transformation matrix to the instance and flag it for updates
-							this.pickedClickObject.setMatrixAt(this.pickedClickInstance + (i + (j * this.map.mapXDimension)), matrix);
-							this.pickedClickObject.instanceMatrix.needsUpdate = true;	
-						}
-					}
-					else if (i > 0)
-					{
-						if (matrix.elements[14] > originalMatrix.elements[14])
-						{
-							// Set the new colour to the corresponding block
-							newColour.toArray( this.map.colourArray, (this.pickedClickInstance + (i + (j * this.map.mapXDimension))) * 3 );
-
-                            var value = this.map.heightMap[matrix.elements[12]][matrix.elements[14]];
-
-							if (value > 1)
-                            {
-                                // Increase the height value of the corresponding element in the map matrix
-                                this.map.heightMap[matrix.elements[12]][matrix.elements[14]] -= 1;
-                                value = this.map.heightMap[matrix.elements[12]][matrix.elements[14]];
-
-                                // Set corresponding values in the transformation matrix for the instance
-                                matrix.elements[5] = value;
-                                matrix.elements[13] = value / 2;
-                            }
-
-							// Set the transformation matrix to the instance and flag it for updates
-							this.pickedClickObject.setMatrixAt(this.pickedClickInstance + (i + (j * this.map.mapXDimension)), matrix);
-							this.pickedClickObject.instanceMatrix.needsUpdate = true;	
-						}
-					}
-					else
-					{
-						// Set the new colour to the corresponding block
-						newColour.toArray( this.map.colourArray, (this.pickedClickInstance + (i + (j * this.map.mapXDimension))) * 3 );
-
-                        var value = this.map.heightMap[matrix.elements[12]][matrix.elements[14]];
-
-                        if (value > 1)
-                        {
-                            // Increase the height value of the corresponding element in the map matrix
-                            this.map.heightMap[matrix.elements[12]][matrix.elements[14]] -= 1;
-                            value = this.map.heightMap[matrix.elements[12]][matrix.elements[14]];
-
-                            // Set corresponding values in the transformation matrix for the instance
-                            matrix.elements[5] = value;
-                            matrix.elements[13] = value / 2;
-                        }
-
-						// Set the transformation matrix to the instance and flag it for updates
-						this.pickedClickObject.setMatrixAt(this.pickedClickInstance + (i + (j * this.map.mapXDimension)), matrix);
-						this.pickedClickObject.instanceMatrix.needsUpdate = true;	
-					}
-				}
-			}
-		}
-		// Buffer the colour array for the material shader
-		this.pickedClickObject.geometry.setAttribute( 'color', new THREE.InstancedBufferAttribute( this.map.colourArray, 3 ) );
-	}
 
 	/*
 	* Selects a block on the grid, adding a HTML element to the area.

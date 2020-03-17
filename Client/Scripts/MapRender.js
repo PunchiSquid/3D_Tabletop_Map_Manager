@@ -25,6 +25,7 @@ class MapScreen
 
 		// User interaction variables
 		this.brushSize = 1;
+		this.brushValue = 2;
 		this.activeSelectType = SelectTypes.SELECT;
 		this.html = new HTMLGenerator(this);
 	}
@@ -73,7 +74,7 @@ class MapScreen
 		controls.target.set(this.xDimension / 2, 0, this.yDimension / 2);
 		controls.update();
 
-		document.addEventListener("AddBlock", this.AddBlock.bind(this));
+		document.addEventListener("AddBlock", this.ChangeBlock.bind(this));
 	}
 
 	/*
@@ -177,19 +178,30 @@ class MapScreen
 	}
 
 	/*
-	* Adds to the height of a block in the heightmap and then modifies the associated instance matrix to re-render it.
+	* Modifies the height of a block incrementally or decrementally in the heightmap and then modifies the associated instance matrix to re-render it.
 	*/
-	AddBlock(e)
+	ChangeBlock(e)
 	{
 		// Store event variables for shortened code
 		let object = this.mesh;
 		let instance = e.detail.instance;
 
 		// Internal function to increment the height of selected blocks
-		let incrementHeight = function()
+		let modifyHeight = function()
 		{
-			// Increase the height value of the corresponding element in the map matrix
-			let value = this.mapMatrix.AddBlock(matrix.elements[12], matrix.elements[14]);
+			let value;
+
+			// Increment or decrement based on selection type
+			if (this.activeSelectType == SelectTypes.ADD)
+			{
+				// Increase the height value of the corresponding element in the map matrix
+				value = this.mapMatrix.AddToHeight(matrix.elements[12], matrix.elements[14], this.brushValue);
+			}
+			else if (this.activeSelectType == SelectTypes.REMOVE)
+			{
+				// Decrease the height value of the corresponding element in the map matrix
+				value = this.mapMatrix.AddToHeight(matrix.elements[12], matrix.elements[14], -this.brushValue);
+			}
 
 			// Set corresponding values in the transformation matrix for the instance
 			matrix.elements[5] = value;
@@ -223,19 +235,19 @@ class MapScreen
 					// If iterating to the left of the center block, X value should be less
 					if (i < 0) {
 						if (matrix.elements[14] < originalMatrix.elements[14]) {
-							incrementHeight();
+							modifyHeight();
 						}
 					}
 
 					// If iterating to the right of the center block, X value should be more
 					else if (i > 0) {
 						if (matrix.elements[14] > originalMatrix.elements[14]) {
-							incrementHeight();
+							modifyHeight();
 						}
 					}
 
 					// if in the center
-					else { incrementHeight(); }
+					else { modifyHeight(); }
 				}
 			}
 		}

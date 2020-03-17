@@ -194,11 +194,16 @@ class Map
 	* then returns the resultant value.
 	* @Param x The X index on the matrix.
 	* @Param y The Y index on the matrix.
+	* @Param value The value to add to / subtract from the heightmap
 	* @Returns The resultant value after incrementing.
 	*/
-	AddBlock(x, y)
+	AddToHeight(x, y, value)
 	{
-		this.heightMap[x][y] += 1;
+		this.heightMap[x][y] += value;
+
+		// Prevent values less than 1, keeping cube dimensions positive
+		if (this.heightMap[x][y] < 1) { this.heightMap[x][y] = 1; }
+
 		return(this.heightMap[x][y]);
 	}
 
