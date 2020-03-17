@@ -72,6 +72,8 @@ class MapScreen
 		const controls = new THREE.OrbitControls(this.camera, this.canvas);
 		controls.target.set(this.xDimension / 2, 0, this.yDimension / 2);
 		controls.update();
+
+		document.addEventListener("AddBlock", this.AddBlock.bind(this));
 	}
 
 	/*
@@ -172,6 +174,85 @@ class MapScreen
 		
 		// Modify the internal rendering resolution
 		this.renderer.setSize(this.canvas.clientWidth, this.canvas.clientHeight, false);
+	}
+
+	/*
+	* Adds to the height of a block in the heightmap and then modifies the associated instance matrix to re-render it.
+	*/
+	AddBlock(e)
+	{
+		// Store event variables for shortened code
+		let object = this.mesh;
+		let instance = e.detail.instance;
+
+		// Internal function to increment the height of selected blocks
+		let incrementHeight = function(instanceValue)
+		{
+			// Increase the height value of the corresponding element in the map matrix
+			let value = this.mapMatrix.AddBlock(matrix.elements[12], matrix.elements[14]);
+
+			// Set corresponding values in the transformation matrix for the instance
+			matrix.elements[5] = value;
+			matrix.elements[13] = value / 2;
+
+			// Set the transformation matrix to the instance and flag it for updates
+			object.setMatrixAt(instanceValue, matrix);
+			object.instanceMatrix.needsUpdate = true;
+
+		}.bind(this);
+
+		// Retrieve the transformation matrix for the clicked instance
+		let originalMatrix = new THREE.Matrix4();
+		object.getMatrixAt(instance, originalMatrix);
+
+		// Iterate through the selected area, the size of the "brush"
+		for (let i = -Math.floor(this.brushSize / 2); i <= Math.floor(this.brushSize / 2); i++)
+		{
+			for (let j = -Math.floor(this.brushSize / 2); j <= Math.floor(this.brushSize / 2); j++)
+			{
+				// Calculate the instance ID based on an offset
+				let instanceValue = (instance + (i + (j * this.mapMatrix.mapXDimension)));
+
+				// Retrieve the transformation matrix for the clicked instance
+				let matrix = new THREE.Matrix4();
+				object.getMatrixAt(instanceValue, matrix);
+
+				// Ensure that the matrix is retrieved correctly
+				if (matrix.elements != null)
+				{
+					// If iterating to the left of the center block, X value should be less
+					if (i < 0) {
+						if (matrix.elements[14] < originalMatrix.elements[14]) {
+							incrementHeight(instanceValue);
+						}
+					}
+
+					// If iterating to the right of the center block, X value should be more
+					else if (i > 0) {
+						if (matrix.elements[14] > originalMatrix.elements[14]) {
+							incrementHeight(instanceValue);
+						}
+					}
+
+					// if in the center
+					else { incrementHeight(instanceValue); }
+				}
+			}
+		}
+	}
+
+	ModifyBlockHeight(eventData)
+	{
+		// Increase the height value of the corresponding element in the map matrix
+		var value = this.map.AddBlock(matrix.elements[12], matrix.elements[14]);
+
+		// Set corresponding values in the transformation matrix for the instance
+		matrix.elements[5] = value;
+		matrix.elements[13] = value / 2;
+
+		// Set the transformation matrix to the instance and flag it for updates
+		this.pickedClickObject.setMatrixAt(this.pickedClickInstance + (i + (j * this.map.mapXDimension)), matrix);
+		this.pickedClickObject.instanceMatrix.needsUpdate = true;
 	}
 
 	/*
