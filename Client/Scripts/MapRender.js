@@ -186,7 +186,7 @@ class MapScreen
 		let instance = e.detail.instance;
 
 		// Internal function to increment the height of selected blocks
-		let incrementHeight = function(instanceValue)
+		let incrementHeight = function()
 		{
 			// Increase the height value of the corresponding element in the map matrix
 			let value = this.mapMatrix.AddBlock(matrix.elements[12], matrix.elements[14]);
@@ -211,10 +211,10 @@ class MapScreen
 			for (let j = -Math.floor(this.brushSize / 2); j <= Math.floor(this.brushSize / 2); j++)
 			{
 				// Calculate the instance ID based on an offset
-				let instanceValue = (instance + (i + (j * this.mapMatrix.mapXDimension)));
+				var instanceValue = (instance + (i + (j * this.mapMatrix.mapXDimension)));
 
 				// Retrieve the transformation matrix for the clicked instance
-				let matrix = new THREE.Matrix4();
+				var matrix = new THREE.Matrix4();
 				object.getMatrixAt(instanceValue, matrix);
 
 				// Ensure that the matrix is retrieved correctly
@@ -223,36 +223,22 @@ class MapScreen
 					// If iterating to the left of the center block, X value should be less
 					if (i < 0) {
 						if (matrix.elements[14] < originalMatrix.elements[14]) {
-							incrementHeight(instanceValue);
+							incrementHeight();
 						}
 					}
 
 					// If iterating to the right of the center block, X value should be more
 					else if (i > 0) {
 						if (matrix.elements[14] > originalMatrix.elements[14]) {
-							incrementHeight(instanceValue);
+							incrementHeight();
 						}
 					}
 
 					// if in the center
-					else { incrementHeight(instanceValue); }
+					else { incrementHeight(); }
 				}
 			}
 		}
-	}
-
-	ModifyBlockHeight(eventData)
-	{
-		// Increase the height value of the corresponding element in the map matrix
-		var value = this.map.AddBlock(matrix.elements[12], matrix.elements[14]);
-
-		// Set corresponding values in the transformation matrix for the instance
-		matrix.elements[5] = value;
-		matrix.elements[13] = value / 2;
-
-		// Set the transformation matrix to the instance and flag it for updates
-		this.pickedClickObject.setMatrixAt(this.pickedClickInstance + (i + (j * this.map.mapXDimension)), matrix);
-		this.pickedClickObject.instanceMatrix.needsUpdate = true;
 	}
 
 	/*
