@@ -201,11 +201,13 @@ class MapScreen
 			{
 				// Increase the height value of the corresponding element in the map matrix
 				value = this.mapMatrix.AddToHeight(matrix.elements[12], matrix.elements[14], this.brushValue);
+				this.RepositionCharacter(matrix.elements[12], value, matrix.elements[14]);
 			}
 			else if (this.activeSelectType == SelectTypes.REMOVE)
 			{
 				// Decrease the height value of the corresponding element in the map matrix
 				value = this.mapMatrix.AddToHeight(matrix.elements[12], matrix.elements[14], -this.brushValue);
+				this.RepositionCharacter(matrix.elements[12], value, matrix.elements[14]);
 			}
 
 			// Set corresponding values in the transformation matrix for the instance
@@ -427,6 +429,24 @@ class MapScreen
 		this.scene.remove(object);
 	}
 
+	RepositionCharacter(x, y, z)
+	{
+		// Iterate through every object in the scene
+		let count = this.scene.children.length;
+
+		for (let i = 0; i < count; i++)
+		{
+			let object = this.scene.children[i];
+
+			// If the object position matches the modified block, modify the object y value to match the new block height
+			if (object.position.x == x && object.position.z == z)
+			{
+				object.position.y = y + 1;
+				break;
+			}
+		}
+	}
+
 	/*
 	* Helper method to remove temporary objects e.g. the cursor hover object
 	*/
@@ -532,7 +552,7 @@ function SetPickPosition(event)
 {
 	const pos = GetCanvasRelativePosition(event);
 	screen.pickPosition.x = (pos.x / screen.canvas.clientWidth ) *  2 - 1;
-	screen.pickPosition.y = (pos.y / screen.canvas.clientHeight) * -2 + 1;  // note we flip Y
+	screen.pickPosition.y = (pos.y / screen.canvas.clientHeight) * -2 + 1;
 }
 
 /*
