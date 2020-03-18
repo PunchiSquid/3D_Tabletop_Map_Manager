@@ -152,7 +152,7 @@ class MapScreen
 			this.mapMesh.instanceMatrix.needsUpdate = true;
 
 			// Create a new helper class to assist in raycasting and object picking, then begin the render cycle
-			this.pickHelper = new InstancedObjectPicker(this.mapMatrix, this.scene, this.camera, this.html);
+			this.pickHelper = new InstancedObjectPicker(this.scene);
 			this.BeginRendering();
 
 		}.bind(this));

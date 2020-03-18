@@ -1,12 +1,9 @@
 class InstancedObjectPicker
 {
-	constructor(map, scene, canvas, html)
+	constructor(scene)
 	{
-        this.raycaster = new THREE.Raycaster();
-        this.map = map;
+		this.raycaster = new THREE.Raycaster();
         this.scene = scene;
-        this.canvas = canvas;
-        this.html = html;
 
 		this.pickedClickObject = null;
 		this.pickedClickInstance = null;
@@ -61,13 +58,13 @@ class InstancedObjectPicker
 					this.AddValueToBlock();
 				}
 				else if (activeSelectType == SelectTypes.REMOVE)
-                {
-                    this.AddValueToBlock();
+				{
+					this.AddValueToBlock();
 				}
 				else if (activeSelectType == SelectTypes.SELECT)
 				{
 					this.SelectBlock();
-                }
+				}
 				else if (activeSelectType == SelectTypes.CHARACTER)
 				{
 					this.AddCharacter();
