@@ -214,7 +214,25 @@ class Map
 			this.heightMap[x][y] = height;
 		}
 
-		return this.heightMap[x][y];
+		return(this.heightMap[x][y]);
+	}
+
+	GetHeight(x, y)
+	{
+		return(this.heightMap[x][y]);
+	}
+
+	GetDescription(x, y)
+	{
+		return(this.detailMatrix[x][y]);
+	}
+
+	SetDescription(x, y, value)
+	{
+		if (value)
+		{
+			this.detailMatrix[x][y] = String(value);
+		}
 	}
 
 	AddCharacter(x, y)
@@ -229,5 +247,14 @@ class Map
 	GetCharacter(x, y)
 	{
 		return this.characterMatrix[x][y];
+	}
+
+	SetCharacter(x, y, value)
+	{
+		// Only allow valid characters with properties or empty records for deletion
+		if (value == null || (value.name && value.description))
+		{
+			this.characterMatrix[x][y] = value;	
+		}
 	}
 }

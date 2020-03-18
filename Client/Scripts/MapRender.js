@@ -78,6 +78,7 @@ class MapScreen
 		document.addEventListener("SelectBlock", this.SelectBlock.bind(this));
 		document.addEventListener("AddCharacter", this.AddCharacter.bind(this));
 		document.addEventListener("CursorHover", this.PickHoveredObject.bind(this));
+		document.addEventListener("DeleteCharacter", this.DeleteCharacter.bind(this));
 	}
 
 	/*
@@ -276,7 +277,7 @@ class MapScreen
 			// Retrieve the world position projected from the camera
 			let dummy = new THREE.Object3D();
 			let tempVector = new THREE.Vector3();
-			dummy.position.set(matrix.elements[12], matrix.elements[13], matrix.elements[14]);
+			dummy.position.set(matrix.elements[12], 0, matrix.elements[14]);
 			dummy.updateMatrix();
 			dummy.getWorldPosition(tempVector);
 			tempVector.project(this.camera);
@@ -319,7 +320,7 @@ class MapScreen
 			let y = (tempVector.y * -.5 + .5) * this.canvas.clientHeight;
 
 			// Add a label
-			this.html.AddCharacterLabel(x, y, matrix);
+			this.html.AddCharacterLabel(x, y, object);
 		}
 
 		// If the selected object is a character
@@ -328,6 +329,8 @@ class MapScreen
 			// Retrieve position
 			let matrix = new THREE.Matrix4();
 			object.getMatrixAt(instance, matrix);
+
+			let characterMesh;
 
 			// Produce a JSON transformation matrix for the clicked object
 			let locationMatrix = 
@@ -356,7 +359,7 @@ class MapScreen
 				let hoverBoxGeometry = new THREE.CylinderGeometry( 0.75, 0, 2, 8 );
 
 				// Create the mesh, set the position and add to the this.scene
-				let characterMesh = new THREE.Mesh( hoverBoxGeometry, hoverMaterial);
+				characterMesh = new THREE.Mesh( hoverBoxGeometry, hoverMaterial);
 				characterMesh.position.set(locationMatrix.x, value + 1.25, locationMatrix.z);
 
 				// Add to the scene
@@ -376,7 +379,7 @@ class MapScreen
 			let y = (tempVector.y * -.5 + .5) * this.canvas.clientHeight;
 
 			// Add a label
-			this.html.AddCharacterLabel(x, y, locationMatrix);
+			this.html.AddCharacterLabel(x, y, characterMesh);
 		}
 	}
 
@@ -412,6 +415,16 @@ class MapScreen
 
 			this.scene.add(this.cursorMesh);
 		}
+	}
+
+	DeleteCharacter(e)
+	{
+		// Store event variables for shortened code
+		let object = e.detail.object;
+
+		// Set the character matrix in the corresponding position to null and remove the rendered object
+		this.mapMatrix.SetCharacter(object.position.x, object.position.z, null);
+		this.scene.remove(object);
 	}
 
 	/*
