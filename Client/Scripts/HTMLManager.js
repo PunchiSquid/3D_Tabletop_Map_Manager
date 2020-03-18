@@ -203,7 +203,16 @@ class HTMLGenerator
 		const heightModFunction = function()
 		{
 			let value = parseInt(heightForm.value);
-			this.mapScreen.IncreaseHeightOfBlock(value, this.object, this.instance);
+
+			let detail = 
+			{
+				instance: this.instance,
+				object: this.object,
+				value: value 
+			};
+			
+			let event = new CustomEvent("SetBlockHeight", { detail: detail });
+			document.dispatchEvent(event);
 		}
 
 		/*

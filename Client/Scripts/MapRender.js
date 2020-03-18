@@ -79,6 +79,7 @@ class MapScreen
 		document.addEventListener("AddCharacter", this.AddCharacter.bind(this));
 		document.addEventListener("CursorHover", this.PickHoveredObject.bind(this));
 		document.addEventListener("DeleteCharacter", this.DeleteCharacter.bind(this));
+		document.addEventListener("SetBlockHeight", this.SetBlockHeight.bind(this))
 	}
 
 	/*
@@ -294,6 +295,35 @@ class MapScreen
 	}
 
 	/*
+	* Changes the height of a block in the height map, then re-renders the corresponding instance.
+	*/
+	SetBlockHeight(e)
+	{
+		// Store event variables for shortened code
+		let object = e.detail.object;
+		let instance = e.detail.instance;
+		let value = e.detail.value;
+
+		// Retrieve the transformation matrix for the clicked instance
+		var matrix = new THREE.Matrix4();
+		object.getMatrixAt(instance, matrix);
+
+		// Increase the height value of the corresponding element in the map matrix
+		var returnedValue = this.mapMatrix.SetHeight(matrix.elements[12], matrix.elements[14], value);
+
+		// Set corresponding values in the transformation matrix for the instance
+		matrix.elements[5] = returnedValue;
+		matrix.elements[13] = returnedValue / 2;
+
+		// Reposition characters on this block
+		this.RepositionCharacter(matrix.elements[12], returnedValue, matrix.elements[14])
+
+		// Set the transformation matrix to the instance and flag it for updates
+		object.setMatrixAt(instance, matrix);
+		object.instanceMatrix.needsUpdate = true;	
+	}
+
+	/*
 	* Adds or selects a character to / on the map
 	*/
 	AddCharacter(e)
@@ -456,30 +486,6 @@ class MapScreen
 		{
 			this.scene.remove(this.cursorMesh);
 		}
-	}
-
-	/*
-	* Increases the height of a block in the height map, then re-renders the corresponding instance.
-	* @Param value The value to set to the height map
-	* @Param object The object to set the resultant matrix to
-	* @Param instance The instance to transform.
-	*/
-	IncreaseHeightOfBlock(value, object, instance)
-	{
-		// Retrieve the transformation matrix for the clicked instance
-		var matrix = new THREE.Matrix4();
-		object.getMatrixAt(instance, matrix);
-
-		// Increase the height value of the corresponding element in the map matrix
-		var returnedValue = this.mapMatrix.SetHeight(matrix.elements[12], matrix.elements[14], value);
-
-		// Set corresponding values in the transformation matrix for the instance
-		matrix.elements[5] = returnedValue;
-		matrix.elements[13] = returnedValue / 2;
-
-		// Set the transformation matrix to the instance and flag it for updates
-		object.setMatrixAt(instance, matrix);
-		object.instanceMatrix.needsUpdate = true;	
 	}
 
 	/*
