@@ -202,14 +202,15 @@ class MapScreen
 			{
 				// Increase the height value of the corresponding element in the map matrix
 				value = this.mapMatrix.AddToHeight(matrix.elements[12], matrix.elements[14], this.brushValue);
-				this.RepositionCharacter(matrix.elements[12], value, matrix.elements[14]);
 			}
 			else if (this.activeSelectType == SelectTypes.REMOVE)
 			{
 				// Decrease the height value of the corresponding element in the map matrix
 				value = this.mapMatrix.AddToHeight(matrix.elements[12], matrix.elements[14], -this.brushValue);
-				this.RepositionCharacter(matrix.elements[12], value, matrix.elements[14]);
 			}
+
+			// Reposition characters on the selected block
+			this.RepositionCharacter(matrix.elements[12], value, matrix.elements[14]);
 
 			// Set corresponding values in the transformation matrix for the instance
 			matrix.elements[5] = value;
