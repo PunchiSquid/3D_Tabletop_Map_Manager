@@ -1,14 +1,20 @@
 $(document).ready(function()
 {
+    let newMapModal = new NewMapModal();
 	PopulateMapList();
 });
 
 function PopulateMapList()
 {
+    var modal = new ProcessModal();
+	modal.Show("Loading map list, please wait.");
+
     let container = document.querySelector('#map_list');
 
     $.get("maplist", function(data, status)
     {
+        modal.Hide();
+
         for (let i = 0; i < data.length; i++)
         {
             let outerContainer = document.createElement("div");
@@ -66,24 +72,6 @@ function PopulateMapList()
                 console.log(editButton.value);
             });
         }
-    });
-}
-
-function NewMapForm()
-{
-    // Get the modal
-    var modal = document.getElementById("modal");
-    modal.style.display = "block";
-
-    var button = document.getElementById("modal_submit");
-    button.addEventListener('click', function()
-    {
-        modal.style.display = "none";
-
-        let nameValue = document.getElementById("name").value;
-        let descriptionValue = document.getElementById("description").value;
-
-        NewMap(nameValue, descriptionValue);
     });
 }
 
