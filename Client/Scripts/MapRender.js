@@ -591,6 +591,38 @@ function SetClick(event)
 	}
 }
 
+function SetButtonBorder()
+{
+	let selectButton = document.getElementById("button_select");
+	let addButton = document.getElementById("button_add");
+	let deleteButton = document.getElementById("button_delete");
+	let characterButton = document.getElementById("button_character");
+
+	selectButton.classList.toggle('active_button', false);
+	addButton.classList.toggle('active_button', false);
+	deleteButton.classList.toggle('active_button', false);
+	characterButton.classList.toggle('active_button', false);
+
+	switch(screen.activeSelectType)
+	{
+		case SelectTypes.SELECT:
+			selectButton.classList.toggle('active_button', true);
+			break;
+		case SelectTypes.ADD:
+			addButton.classList.toggle('active_button', true);
+			break;
+		case SelectTypes.REMOVE:
+			deleteButton.classList.toggle('active_button', true);
+			break;
+		case SelectTypes.CHARACTER:
+			characterButton.classList.toggle('active_button', true);
+			break;
+		default:
+			console.log("None");
+			break;
+	}
+}
+
 /*
 * Binds event listeners to DOM objects.
 */
@@ -602,21 +634,25 @@ function InitialiseEventListeners()
 	document.getElementById("button_select").addEventListener("click", function()
 	{
 		screen.activeSelectType = SelectTypes.SELECT;
+		SetButtonBorder();
 	});
 
 	document.getElementById("button_add").addEventListener("click", function()
 	{
 		screen.activeSelectType = SelectTypes.ADD;
+		SetButtonBorder();
 	});
 
 	document.getElementById("button_delete").addEventListener("click", function()
 	{
 		screen.activeSelectType = SelectTypes.REMOVE;
+		SetButtonBorder();
 	});
 
 	document.getElementById("button_character").addEventListener("click", function()
 	{
 		screen.activeSelectType = SelectTypes.CHARACTER;
+		SetButtonBorder();
 	});
 
 	document.getElementById("button_save").addEventListener("click", function()

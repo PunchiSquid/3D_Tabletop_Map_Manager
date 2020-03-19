@@ -40,6 +40,7 @@ class HTMLGenerator
 
 		// Create a new label div
 		this.label = document.createElement("div");
+		this.label.className = "active_label";
 
 		// Create a new header and set the inner text
 		let nameTitle = document.createElement("p");
@@ -162,6 +163,7 @@ class HTMLGenerator
 
 		// Create a new label div
 		this.label = document.createElement("div");
+		this.label.className = "active_label";
 
 		// Create a new header and set the inner text
 		let heightTitle = document.createElement("p");
@@ -210,7 +212,7 @@ class HTMLGenerator
 				object: this.object,
 				value: value 
 			};
-			
+
 			let event = new CustomEvent("SetBlockHeight", { detail: detail });
 			document.dispatchEvent(event);
 		}
@@ -284,6 +286,9 @@ class HTMLGenerator
 
 			let x = (tempVector.x *  .5 + .5) * this.mapScreen.canvas.clientWidth;
 			let y = (tempVector.y * -.5 + .5) * this.mapScreen.canvas.clientHeight;
+
+			// Show the label
+			this.label.classList.toggle('show', true);
 
 			// Translate the label to the correct position
 			this.label.style.transform = `translate(-50%, -50%) translate(${x  + this.horizontalOffset}px,${y}px)`;
