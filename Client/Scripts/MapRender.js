@@ -143,6 +143,7 @@ class MapScreen
 					{
 						let characterMesh = new THREE.Mesh( characterGeometry, characterMaterial);
 						characterMesh.position.set(i, value + 1.25, j);
+						characterMesh.name = "Character";
 						this.scene.add(characterMesh);
 					}
 				}
@@ -394,6 +395,7 @@ class MapScreen
 				// Create the mesh, set the position and add to the this.scene
 				characterMesh = new THREE.Mesh( hoverBoxGeometry, hoverMaterial);
 				characterMesh.position.set(locationMatrix.x, value + 1.25, locationMatrix.z);
+				characterMesh.name = "Character";
 
 				// Add to the scene
 				this.scene.add(characterMesh);
@@ -472,8 +474,11 @@ class MapScreen
 			// If the object position matches the modified block, modify the object y value to match the new block height
 			if (object.position.x == x && object.position.z == z)
 			{
-				object.position.y = y + 1;
-				break;
+				if (object.name == "Character")
+				{
+					object.position.y = y + 1;
+					break;
+				}
 			}
 		}
 	}
