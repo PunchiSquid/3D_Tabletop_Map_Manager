@@ -25,7 +25,7 @@ class MapScreen
 
 		// User interaction variables
 		this.brushSize = 1;
-		this.brushValue = 2;
+		this.brushValue = 1;
 		this.activeSelectType = SelectTypes.SELECT;
 		this.html = new HTMLGenerator(this);
 
@@ -252,7 +252,7 @@ class MapScreen
 				object.getMatrixAt(instanceValue, matrix);
 
 				// Ensure that the matrix is retrieved correctly
-				if (matrix.elements != null)
+				if (matrix.elements != null && (instanceValue > 0 && instanceValue < this.count))
 				{
 					// If iterating to the left of the center block, X value should be less
 					if (i < 0) {
@@ -634,24 +634,29 @@ function InitialiseEventListeners()
 	document.getElementById("button_select").addEventListener("click", function()
 	{
 		screen.activeSelectType = SelectTypes.SELECT;
+		screen.html.RemoveLabels();
 		SetButtonBorder();
 	});
 
 	document.getElementById("button_add").addEventListener("click", function()
 	{
 		screen.activeSelectType = SelectTypes.ADD;
+		screen.html.RemoveLabels();
+		screen.html.AddDrawMenu();
 		SetButtonBorder();
 	});
 
 	document.getElementById("button_delete").addEventListener("click", function()
 	{
 		screen.activeSelectType = SelectTypes.REMOVE;
+		screen.html.RemoveLabels();
 		SetButtonBorder();
 	});
 
 	document.getElementById("button_character").addEventListener("click", function()
 	{
 		screen.activeSelectType = SelectTypes.CHARACTER;
+		screen.html.RemoveLabels();
 		SetButtonBorder();
 	});
 

@@ -24,7 +24,6 @@
 	position: fixed; 
 	left: 0; 
 	top: 0; 
-	z-index: -1;
 }
 
 #container
@@ -48,6 +47,36 @@
 	left: 0;
 	top: 0;
 	color: white;
+}
+
+#menus
+{
+	position: absolute;
+	height: 90%;
+	right: 25%;
+	top: 5%;
+	color: white;
+}
+
+#menus>div
+{
+	position: absolute;
+	left: 0;
+	top: 0;
+	font-size: large;
+	height: 100%;
+	background-color: rgba(0, 0, 0, 0.7);
+	padding: 10px;
+	border-radius: 20px;
+	text-shadow:
+	-1px -1px 0 #000,
+     0   -1px 0 #000,
+     1px -1px 0 #000,
+     1px  0   0 #000,
+     1px  1px 0 #000,
+     0    1px 0 #000,
+    -1px  1px 0 #000,
+    -1px  0   0 #000;
 }
 
 .active_label
@@ -104,6 +133,7 @@
 	width: 7%;
 	top: 0%;
 	right: 1%;
+	z-index: 1;
 }
 
 #right_buttons>button

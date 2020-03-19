@@ -3,6 +3,7 @@ class HTMLGenerator
 	constructor(mapScreen)
 	{
 		this.labelContainer = document.querySelector('#labels');
+		this.menuContainer = document.querySelector('#menus');
 		this.object = null;
 		this.instance = null;
         this.label = null;
@@ -19,6 +20,11 @@ class HTMLGenerator
 		while (this.labelContainer.hasChildNodes())
 		{
 			this.labelContainer.removeChild(this.labelContainer.childNodes[0]);
+		}
+
+		while (this.menuContainer.hasChildNodes())
+		{
+			this.menuContainer.removeChild(this.menuContainer.childNodes[0]);
 		}
 
 		this.object = null;
@@ -241,11 +247,95 @@ class HTMLGenerator
 		closeButton.addEventListener('mousedown', closeLabelFunction.bind(this));
 	}
 
+	AddDrawMenu()
+	{
+		// Clear the existing labels
+		this.RemoveLabels();
+		
+		// Create a new label div
+		this.label = document.createElement("div");
+		this.label.className = "active_label";
+
+		// Create new headers and set the inner text
+		let brushSizeTitle = document.createElement("p");
+		brushSizeTitle.textContent = "Brush Size";
+		brushSizeTitle.style = "display: inline-block; padding-right: 10px;";
+
+		let brushValueTitle = document.createElement("p");
+		brushValueTitle.textContent = "Increment Value";
+
+		// Create forms and fill with retrieved values
+		let brushSizeForm = document.createElement("input");
+		brushSizeForm.setAttribute("type", "number");
+		brushSizeForm.setAttribute("step", "2");
+		brushSizeForm.setAttribute("min", "1");
+		brushSizeForm.setAttribute("value", this.mapScreen.brushSize);
+		brushSizeForm.style = "display: inline-block";
+
+		let brushValueForm = document.createElement("input");
+		brushValueForm.setAttribute("type", "number");
+		brushValueForm.setAttribute("min", "1");
+		brushValueForm.setAttribute("value", this.mapScreen.brushValue);
+		brushValueForm.style = "display: inline-block";
+
+		// Create buttons
+		let closeButton = document.createElement("input");
+		closeButton.setAttribute("type", "button");
+		closeButton.setAttribute("value", "Close");
+
+		// Append the new label to the label container and label elements to the label
+		this.menuContainer.appendChild(this.label);
+		this.label.appendChild(brushSizeTitle);
+		this.label.appendChild(brushSizeForm);
+		this.label.appendChild(brushValueTitle);
+		this.label.appendChild(brushValueForm);
+		this.label.appendChild(closeButton);
+
+		/*
+		* Internal function for modifying block height when number field is modified.
+		*/
+		const valueModFunction = function()
+		{
+			let sizeValue = parseInt(brushSizeForm.value);
+
+			if ((sizeValue % 2) == 0)
+			{
+				sizeValue += 1;
+				console.log(sizeValue);
+				brushSizeForm.value = sizeValue;
+			}
+
+			this.mapScreen.brushSize = sizeValue;
+
+			let incrementValue = parseInt(brushValueForm.value);
+			this.mapScreen.brushValue = incrementValue;
+		}
+
+		/*
+		* Internal function for closing labels when the close button is clicked.
+		*/
+		const closeLabelFunction = function()
+		{
+			this.RemoveLabels();
+		}
+
+		// Register event listeners for label HTML interactions.
+		brushSizeForm.addEventListener('input', valueModFunction.bind(this));
+		brushValueForm.addEventListener('input', valueModFunction.bind(this));
+		closeButton.addEventListener('mousedown', closeLabelFunction.bind(this));
+	}
+
 	/*
 	* Moves existing labels to update locations based on the moving 3D space.
 	*/
 	MoveLabel()
 	{
+		if (this.label)
+		{
+			// Show the label
+			this.label.classList.toggle('show', true);
+		}
+
 		if (this.object)
 		{
 			// Used for positioning of label components
@@ -286,9 +376,6 @@ class HTMLGenerator
 
 			let x = (tempVector.x *  .5 + .5) * this.mapScreen.canvas.clientWidth;
 			let y = (tempVector.y * -.5 + .5) * this.mapScreen.canvas.clientHeight;
-
-			// Show the label
-			this.label.classList.toggle('show', true);
 
 			// Translate the label to the correct position
 			this.label.style.transform = `translate(-50%, -50%) translate(${x  + this.horizontalOffset}px,${y}px)`;
