@@ -16,7 +16,8 @@
 	
 	<!-- Internal Scripts -->
     <script src="Map.js"></script>
-    <script src="ListFunctions.js"></script>
+	<script src="ListFunctions.js"></script>
+	<script src="ModalManager.js"></script>
 	<script src="utilities.js"> </script>
 	<script src="HandleError.js"> </script>
 	<script src="three.js"></script>
@@ -25,23 +26,8 @@
 
 <body>
     <canvas class="dice_canvas" id="c"></canvas>    
-    <button id="newButton" onclick="NewMapForm()">New Map</button>
+    <button id="newButton">New Map</button>
 	<div id="map_list"></div>
-	
-	<!-- Modal content -->
-	<div id="modal" class="my-modal-content">
-		<div class="my-modal-header">
-			<h2>Enter Map Details</h2>
-		</div>
-		<div class="my-modal-body">
-			<p>Name</p>
-			<input type="text" id="name" name="name"><br>
-			<p>Description:</p>
-			<textarea id="description" name="description"></textarea><br><br>
-			<button id="modal_submit">Create Map</button>
-		</div>
-	</div>
-
 </body>
 
 <script src="LoginBackdrop.js"></script>
