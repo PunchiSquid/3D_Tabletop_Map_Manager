@@ -28,6 +28,10 @@ class MapScreen
 		this.brushValue = 2;
 		this.activeSelectType = SelectTypes.SELECT;
 		this.html = new HTMLGenerator(this);
+
+		// Initialise modal objects to retrieve DOM elements and set up event listeners
+		this.processModal = new ProcessModal();
+		this.alertModal = new AlertModal();
 	}
 
 	/*
@@ -93,8 +97,13 @@ class MapScreen
 
 		// Construct a new map and load from a file
 		this.mapMatrix = new Map();
+
+		this.processModal.Show("Loading map file, please wait.");
+
 		this.mapMatrix.LoadMap(id).then(function() 
 		{
+			this.processModal.Hide();
+
 			// Set up the instanced box geometry
 			let boxGeometry = new THREE.BoxGeometry(1, 1, 1);
 			let instancedGeometry = new THREE.InstancedBufferGeometry();
@@ -164,10 +173,13 @@ class MapScreen
 	*/
 	SaveMap()
 	{
+		this.processModal.Show("Saving map, please wait.");
+
 		this.mapMatrix.SaveMap().then(function()
 		{
-			console.log("Map Saved");
-		});
+			this.processModal.Hide();
+			this.alertModal.Show("Map Saved!");
+		}.bind(this));
 	}
 
 	/*
