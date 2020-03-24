@@ -18,6 +18,7 @@
 		<script src="/three.js"></script>
 		<script src="/GLTFLoader.js"></script>
 		<script src="/OrbitControls.js"></script>
+		<script src="/ModalManager.js"></script>
 		<script src="/socket.io.js"></script>
 	</head>
 
@@ -26,21 +27,24 @@
 
 			<canvas id="c"></canvas>
 			<div id="left_buttons">
-				<button id="button_save"><img src="/Icons/Save.png"></button>	
+				<button id="button_save"><img title="Save Map" src="/Icons/Save.png"></button>	
 			</div>
 
 			<!-- Right-hand buttons -->
 			<div id="right_buttons">
-				<button id="button_select"><img src="/Icons/Select.png"></button>
-				<button id="button_add"><img src="/Icons/Add.png"></button>
-				<button id="button_delete"><img src="/Icons/Remove.png"></button>
-				<button id="button_character"><img src="/Icons/Character.png"></button>
-				<button id="button_hiddenblocks"><img src="/Icons/HiddenBlocks.png"></button>
-				<button id="button_environmentalblocks"><img src="/Icons/EnvironmentalBlocks.png"></button>
+				<button id="button_select"><img title="Select Block" src="/Icons/Select.png"></button>
+				<button id="button_add"><img title="Add Block" src="/Icons/Add.png"></button>
+				<button id="button_delete"><img title="Subtract Block" src="/Icons/Remove.png"></button>
+				<button id="button_character"><img title="Add/Select Character" src="/Icons/Character.png"></button>
+				<button id="button_hiddenblocks"><img title="Manage Hidden Regions" src="/Icons/HiddenBlocks.png"></button>
+				<button id="button_environmentalblocks"><img title="Manage Environmental Effects" src="/Icons/EnvironmentalBlocks.png"></button>
 			</div>
 
 			<!-- Inner container for labels to be generated in javascript -->
 			<div id="labels"></div>
+
+			<!-- Inner container for menu elements to be generated in javascript -->
+			<div id="menus"></div>
 
 		</div>
 	</body>

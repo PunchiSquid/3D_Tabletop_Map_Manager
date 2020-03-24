@@ -194,11 +194,16 @@ class Map
 	* then returns the resultant value.
 	* @Param x The X index on the matrix.
 	* @Param y The Y index on the matrix.
+	* @Param value The value to add to / subtract from the heightmap
 	* @Returns The resultant value after incrementing.
 	*/
-	AddBlock(x, y)
+	AddToHeight(x, y, value)
 	{
-		this.heightMap[x][y] += 1;
+		this.heightMap[x][y] += value;
+
+		// Prevent values less than 1, keeping cube dimensions positive
+		if (this.heightMap[x][y] < 1) { this.heightMap[x][y] = 1; }
+
 		return(this.heightMap[x][y]);
 	}
 
@@ -209,7 +214,25 @@ class Map
 			this.heightMap[x][y] = height;
 		}
 
-		return this.heightMap[x][y];
+		return(this.heightMap[x][y]);
+	}
+
+	GetHeight(x, y)
+	{
+		return(this.heightMap[x][y]);
+	}
+
+	GetDescription(x, y)
+	{
+		return(this.detailMatrix[x][y]);
+	}
+
+	SetDescription(x, y, value)
+	{
+		if (value)
+		{
+			this.detailMatrix[x][y] = String(value);
+		}
 	}
 
 	AddCharacter(x, y)
@@ -224,5 +247,14 @@ class Map
 	GetCharacter(x, y)
 	{
 		return this.characterMatrix[x][y];
+	}
+
+	SetCharacter(x, y, value)
+	{
+		// Only allow valid characters with properties or empty records for deletion
+		if (value == null || (value.name && value.description))
+		{
+			this.characterMatrix[x][y] = value;	
+		}
 	}
 }

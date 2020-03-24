@@ -24,7 +24,6 @@
 	position: fixed; 
 	left: 0; 
 	top: 0; 
-	z-index: -1;
 }
 
 #container
@@ -50,6 +49,47 @@
 	color: white;
 }
 
+#menus
+{
+	position: absolute;
+	height: 90%;
+	right: 25%;
+	top: 5%;
+	color: white;
+}
+
+#menus>div
+{
+	position: absolute;
+	left: 0;
+	top: 0;
+	font-size: large;
+	height: 100%;
+	background-color: rgba(0, 0, 0, 0.7);
+	padding: 10px;
+	border-radius: 20px;
+	text-shadow:
+	-1px -1px 0 #000,
+     0   -1px 0 #000,
+     1px -1px 0 #000,
+     1px  0   0 #000,
+     1px  1px 0 #000,
+     0    1px 0 #000,
+    -1px  1px 0 #000,
+    -1px  0   0 #000;
+}
+
+.active_label
+{
+	opacity: 0;
+	transition: opacity .1s ease-in-out;
+}
+
+.active_label.show
+{
+	opacity: 1;
+}
+
 #left_buttons
 {
 	position: absolute;
@@ -64,9 +104,10 @@
 #left_buttons>button
 {
 	color: white;
+	border-style: solid;
 	background-color: black;
 	border-color: black;
-	border: #000;
+	border-radius: 20px;
 	
 	height: auto;
 }
@@ -92,14 +133,17 @@
 	width: 7%;
 	top: 0%;
 	right: 1%;
+	z-index: 1;
 }
 
 #right_buttons>button
 {
 	color: white;
+	border-style: solid;
 	background-color: black;
 	border-color: black;
-	border: #000;
+	border-radius: 20px;
+	outline:none;
 	
 	height: auto;
 }
@@ -107,9 +151,9 @@
 #right_buttons>button>img
 {
 	color: white;
+	border-style: solid;
 	background-color: black;
 	border-color: black;
-	border: #000;
 
 	width: 100%;
 	height: auto;
@@ -137,6 +181,14 @@
 #newButton
 {
 	margin: 0.5%;
+}
+
+.active_button
+{
+	border-style: solid !important;
+	border-width: 8px !important;
+	border-color: purple !important;
+	border-radius: 20px !important;
 }
 
 .outerContainer
@@ -188,7 +240,7 @@
 {
 	text-align: center;
 	padding: 2px 16px;
-	background-color: #5cb85c;
+	background-color: purple;
 	color: white;
 }
 
@@ -208,31 +260,44 @@
 .my-modal-footer 
 {
 	padding: 2px 16px;
-	background-color: #5cb85c;
+	background-color: purple;
 	color: white;
 }
 
 /* Modal Content */
 .my-modal-content 
 {
-	display: none;
+	display: block;
 	position: fixed;
-	top: 25%;
+	top: -300px;
 	left: 37.5%;
-	background-color: #fefefe;
+	background-color: white;
+	opacity: 0;
 	z-index: 2;
 	margin: auto;
 	padding: 0;
-	border: 1px solid #888;
+	border: 2px solid purple;
+	border-radius: 10px;
 	width: 25%;
 	box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2),0 6px 20px 0 rgba(0,0,0,0.19);
-	animation-name: animatetop;
-	animation-duration: 0.4s
+	transition: all .2s ease-in-out;
 }
-  
-/* Add Animation */
-@keyframes animatetop 
+
+.my-modal-close
 {
-	from {top: -300px; opacity: 0}
-	to {top: 25%; opacity: 1}
+	color: white;
+	float: right;
+	font-size: 28px;
+	font-weight: bold;
+}
+
+.my-modal-close:hover
+{
+	cursor: pointer;
+}
+
+.my-modal-content.transition
+{
+	opacity: 1;
+	top: 40%; 
 }

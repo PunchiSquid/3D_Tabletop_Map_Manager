@@ -1,5 +1,8 @@
+let alertModal;
+
 $(document).ready(function()
 {
+	alertModal = new AlertModal();
 	HandleAlert();
 });
 
@@ -11,7 +14,7 @@ function HandleAlert()
 	// If the cookie exists, display an alert
 	if (alertMessage != null)
 	{
-		alert(alertMessage);
+		alertModal.Show(alertMessage);
 		$.removeCookie("Alert");
 	}
 }

@@ -1,14 +1,20 @@
 $(document).ready(function()
 {
+    let newMapModal = new NewMapModal();
 	PopulateMapList();
 });
 
 function PopulateMapList()
 {
+    var modal = new ProcessModal();
+	modal.Show("Loading map list, please wait.");
+
     let container = document.querySelector('#map_list');
 
     $.get("maplist", function(data, status)
     {
+        modal.Hide();
+
         for (let i = 0; i < data.length; i++)
         {
             let outerContainer = document.createElement("div");

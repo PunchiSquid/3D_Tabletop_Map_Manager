@@ -3,11 +3,12 @@ class HTMLGenerator
 	constructor(mapScreen)
 	{
 		this.labelContainer = document.querySelector('#labels');
-		this.currentLabelObject = null;
-		this.currentLabelLocation = null;
-		this.matrix = null;
-        this.newLabel = null;
-        this.mapScreen = mapScreen;
+		this.menuContainer = document.querySelector('#menus');
+		this.object = null;
+		this.instance = null;
+        this.label = null;
+		this.mapScreen = mapScreen;
+		this.horizontalOffset = 200;
 	}
 
 	/*
@@ -21,24 +22,31 @@ class HTMLGenerator
 			this.labelContainer.removeChild(this.labelContainer.childNodes[0]);
 		}
 
-		this.currentLabelObject = null;
-		this.currentLabelLocation = null;
-		this.matrix = null;
-		this.newLabel = null;
+		while (this.menuContainer.hasChildNodes())
+		{
+			this.menuContainer.removeChild(this.menuContainer.childNodes[0]);
+		}
+
+		this.object = null;
+		this.instance = null;
+		this.label = null;
 	}
 
-	AddCharacterLabel(x, y, matrix)
+	AddCharacterLabel(x, y, object)
 	{
 		// Clear the existing labels
 		this.RemoveLabels();
 
-		this.matrix = matrix;
+		// Set the active object
+		this.object = object;
 
-		let nameValue = this.mapScreen.mapMatrix.characterMatrix[this.matrix.x][this.matrix.z].name;
-		let notesValue = this.mapScreen.mapMatrix.characterMatrix[this.matrix.x][this.matrix.z].notes;
+		// Retrieve details for display
+		let nameValue = this.mapScreen.mapMatrix.characterMatrix[this.object.position.x][this.object.position.z].name;
+		let notesValue = this.mapScreen.mapMatrix.characterMatrix[this.object.position.x][this.object.position.z].notes;
 
 		// Create a new label div
-		this.newLabel = document.createElement("div");
+		this.label = document.createElement("div");
+		this.label.className = "active_label";
 
 		// Create a new header and set the inner text
 		let nameTitle = document.createElement("p");
@@ -48,6 +56,7 @@ class HTMLGenerator
 		let notesTitle = document.createElement("p");
 		notesTitle.textContent = "Notes";
 
+		// Create forms and fill with retrieved values
 		let nameForm = document.createElement("input");
 		nameForm.setAttribute("type", "text");
 		nameForm.setAttribute("min", "1");
@@ -57,6 +66,7 @@ class HTMLGenerator
 		let notesForm = document.createElement("textarea");
 		notesForm.value = notesValue;
 
+		// Create buttons
 		let closeButton = document.createElement("input");
 		closeButton.setAttribute("type", "button");
 		closeButton.setAttribute("value", "Close");
@@ -65,13 +75,25 @@ class HTMLGenerator
 		deleteButton.setAttribute("type", "button");
 		deleteButton.setAttribute("value", "Delete");
 
+		// Append the new label to the label container and label elements to the label
+		this.labelContainer.appendChild(this.label);
+		this.label.appendChild(nameTitle);
+		this.label.appendChild(nameForm);
+		this.label.appendChild(notesTitle);
+		this.label.appendChild(notesForm);
+		this.label.appendChild(closeButton);
+		this.label.appendChild(deleteButton);
+
+		// Transform the new element with CSS
+		this.label.style.transform = `translate(-50%, -50%) translate(${x + this.horizontalOffset}px,${y}px)`;
+
 		/*
 		* Internal function for modifying block height when number field is modified.
 		*/
 		const nameModFunction = function()
 		{
 			let value = nameForm.value;
-			this.mapScreen.mapMatrix.characterMatrix[this.matrix.x][this.matrix.z].name = value;
+			this.mapScreen.mapMatrix.characterMatrix[this.object.position.x][this.object.position.z].name = value;
 		}
 
 		/*
@@ -81,7 +103,7 @@ class HTMLGenerator
 		{
 			// Increase the height value of the corresponding element in the map matrix
 			let value = notesForm.value;
-			this.mapScreen.mapMatrix.characterMatrix[this.matrix.x][this.matrix.z].notes = value;
+			this.mapScreen.mapMatrix.characterMatrix[this.object.position.x][this.object.position.z].notes = value;
 		}
 
 		/*
@@ -89,22 +111,10 @@ class HTMLGenerator
 		*/
 		const deleteCharacterFunction = function()
 		{
-			// Increase the height value of the corresponding element in the map matrix
-			let value = notesForm.value;
-			this.mapScreen.mapMatrix.characterMatrix[this.matrix.x][this.matrix.z] = null;
-
-			let count = this.mapScreen.scene.children.length;
-
-			for (let i = 0; i < count; i++)
-			{
-				let element = this.mapScreen.scene.children[i];
-
-				if (element != null && element.position.x == this.matrix.x && element.position.z == this.matrix.z)
-				{
-					this.mapScreen.scene.remove(element);
-					break;
-				}
-			}
+			// Dispatch a DeleteCharacter event to the document
+			let detail = { object: this.object };
+			let event = new CustomEvent("DeleteCharacter", { detail: detail });
+			document.dispatchEvent(event);
 
 			this.RemoveLabels();
 		}
@@ -122,19 +132,6 @@ class HTMLGenerator
 		notesForm.addEventListener('input', notesModFunction.bind(this));
 		closeButton.addEventListener('mousedown', closeLabelFunction.bind(this));
 		deleteButton.addEventListener('mousedown', deleteCharacterFunction.bind(this));
-		
-
-		// Append the new label to the label container
-		this.labelContainer.appendChild(this.newLabel);
-		this.newLabel.appendChild(nameTitle);
-		this.newLabel.appendChild(nameForm);
-		this.newLabel.appendChild(notesTitle);
-		this.newLabel.appendChild(notesForm);
-		this.newLabel.appendChild(closeButton);
-		this.newLabel.appendChild(deleteButton);
-
-		// Transform the new element with CSS
-		this.newLabel.style.transform = `translate(-50%, -50%) translate(${x}px,${y}px)`;
 	}
 
 	/*
@@ -145,18 +142,20 @@ class HTMLGenerator
 	* @Param currentLabelobject The instanced object to retrieve the transformation matrix from.
 	* @Param currentLabelLocation The specific instance of the object to access.
 	*/
-	AddLabel(x, y, currentLabelObject, currentLabelLocation)
+	AddLabel(x, y, object, instance)
 	{
 		// Clear the existing labels
 		this.RemoveLabels();
 
-		this.currentLabelObject = currentLabelObject;
-		this.currentLabelLocation = currentLabelLocation;
+		// Set the active object
+		this.object = object;
+		this.instance = instance;
 
 		// Retrieve the transformation matrix for the clicked instance
 		var retrievedMatrix = new THREE.Matrix4();
-		this.currentLabelObject.getMatrixAt(this.currentLabelLocation, retrievedMatrix);
+		this.object.getMatrixAt(this.instance, retrievedMatrix);
 
+		// Store repeatedly accessed values in a form that can be more easily read
 		var matrix = 
 		{
 			x: retrievedMatrix.elements[12],
@@ -164,14 +163,13 @@ class HTMLGenerator
 			z: retrievedMatrix.elements[14]
 		};
 
-		this.matrix = matrix;
-
-		let heightValue = this.mapScreen.mapMatrix.heightMap[this.matrix.x][this.matrix.z];
-		let descriptionValue = this.mapScreen.mapMatrix.detailMatrix[this.matrix.x][this.matrix.z]
-
+		// Retrieve values for display
+		let heightValue = this.mapScreen.mapMatrix.GetHeight(matrix.x, matrix.z);
+		let descriptionValue = this.mapScreen.mapMatrix.GetDescription(matrix.x, matrix.z);
 
 		// Create a new label div
-		this.newLabel = document.createElement("div");
+		this.label = document.createElement("div");
+		this.label.className = "active_label";
 
 		// Create a new header and set the inner text
 		let heightTitle = document.createElement("p");
@@ -181,6 +179,7 @@ class HTMLGenerator
 		let descriptionTitle = document.createElement("p");
 		descriptionTitle.textContent = "Description";
 
+		// Create forms and fill with retrieved values
 		let heightForm = document.createElement("input");
 		heightForm.setAttribute("type", "number");
 		heightForm.setAttribute("min", "1");
@@ -189,9 +188,22 @@ class HTMLGenerator
 
 		let descriptionForm = document.createElement("textarea");
 		descriptionForm.value = descriptionValue;
+
+		// Create buttons
 		let closeButton = document.createElement("input");
 		closeButton.setAttribute("type", "button");
 		closeButton.setAttribute("value", "Close");
+
+		// Append the new label to the label container
+		this.labelContainer.appendChild(this.label);
+		this.label.appendChild(heightTitle);
+		this.label.appendChild(heightForm);
+		this.label.appendChild(descriptionTitle);
+		this.label.appendChild(descriptionForm);
+		this.label.appendChild(closeButton);
+
+		// Transform the new element with CSS
+		this.label.style.transform = `translate(-50%, -50%) translate(${x + this.horizontalOffset}px,${y}px)`;
 
 		/*
 		* Internal function for modifying block height when number field is modified.
@@ -199,7 +211,16 @@ class HTMLGenerator
 		const heightModFunction = function()
 		{
 			let value = parseInt(heightForm.value);
-			this.mapScreen.IncreaseHeightOfBlock(value, this.currentLabelObject, this.currentLabelLocation);
+
+			let detail = 
+			{
+				instance: this.instance,
+				object: this.object,
+				value: value 
+			};
+
+			let event = new CustomEvent("SetBlockHeight", { detail: detail });
+			document.dispatchEvent(event);
 		}
 
 		/*
@@ -209,7 +230,7 @@ class HTMLGenerator
 		{
 			// Increase the height value of the corresponding element in the map matrix
 			let value = descriptionForm.value;
-			this.mapScreen.mapMatrix.detailMatrix[matrix.elements[12]][matrix.elements[14]] = value;
+			this.mapScreen.mapMatrix.SetDescription(matrix.x, matrix.z, value);
 		}
 
 		/*
@@ -221,21 +242,87 @@ class HTMLGenerator
 		}
 
 		// Register event listeners for label HTML interactions.
-		heightForm.addEventListener('change', heightModFunction.bind(this));
+		heightForm.addEventListener('input', heightModFunction.bind(this));
 		descriptionForm.addEventListener('input', descriptionModFunction.bind(this));
 		closeButton.addEventListener('mousedown', closeLabelFunction.bind(this));
+	}
+
+	AddDrawMenu()
+	{
+		// Clear the existing labels
+		this.RemoveLabels();
 		
+		// Create a new label div
+		this.label = document.createElement("div");
+		this.label.className = "active_label";
 
-		// Append the new label to the label container
-		this.labelContainer.appendChild(this.newLabel);
-		this.newLabel.appendChild(heightTitle);
-		this.newLabel.appendChild(heightForm);
-		this.newLabel.appendChild(descriptionTitle);
-		this.newLabel.appendChild(descriptionForm);
-		this.newLabel.appendChild(closeButton);
+		// Create new headers and set the inner text
+		let brushSizeTitle = document.createElement("p");
+		brushSizeTitle.textContent = "Brush Size";
+		brushSizeTitle.style = "display: inline-block; padding-right: 10px;";
 
-		// Transform the new element with CSS
-		this.newLabel.style.transform = `translate(-50%, -50%) translate(${x}px,${y}px)`;
+		let brushValueTitle = document.createElement("p");
+		brushValueTitle.textContent = "Increment Value";
+
+		// Create forms and fill with retrieved values
+		let brushSizeForm = document.createElement("input");
+		brushSizeForm.setAttribute("type", "number");
+		brushSizeForm.setAttribute("step", "2");
+		brushSizeForm.setAttribute("min", "1");
+		brushSizeForm.setAttribute("value", this.mapScreen.brushSize);
+		brushSizeForm.style = "display: inline-block";
+
+		let brushValueForm = document.createElement("input");
+		brushValueForm.setAttribute("type", "number");
+		brushValueForm.setAttribute("min", "1");
+		brushValueForm.setAttribute("value", this.mapScreen.brushValue);
+		brushValueForm.style = "display: inline-block";
+
+		// Create buttons
+		let closeButton = document.createElement("input");
+		closeButton.setAttribute("type", "button");
+		closeButton.setAttribute("value", "Close");
+
+		// Append the new label to the label container and label elements to the label
+		this.menuContainer.appendChild(this.label);
+		this.label.appendChild(brushSizeTitle);
+		this.label.appendChild(brushSizeForm);
+		this.label.appendChild(brushValueTitle);
+		this.label.appendChild(brushValueForm);
+		this.label.appendChild(closeButton);
+
+		/*
+		* Internal function for modifying block height when number field is modified.
+		*/
+		const valueModFunction = function()
+		{
+			let sizeValue = parseInt(brushSizeForm.value);
+
+			if ((sizeValue % 2) == 0)
+			{
+				sizeValue += 1;
+				console.log(sizeValue);
+				brushSizeForm.value = sizeValue;
+			}
+
+			this.mapScreen.brushSize = sizeValue;
+
+			let incrementValue = parseInt(brushValueForm.value);
+			this.mapScreen.brushValue = incrementValue;
+		}
+
+		/*
+		* Internal function for closing labels when the close button is clicked.
+		*/
+		const closeLabelFunction = function()
+		{
+			this.RemoveLabels();
+		}
+
+		// Register event listeners for label HTML interactions.
+		brushSizeForm.addEventListener('input', valueModFunction.bind(this));
+		brushValueForm.addEventListener('input', valueModFunction.bind(this));
+		closeButton.addEventListener('mousedown', closeLabelFunction.bind(this));
 	}
 
 	/*
@@ -243,11 +330,46 @@ class HTMLGenerator
 	*/
 	MoveLabel()
 	{
-		if (this.matrix)
+		if (this.label)
 		{
+			// Show the label
+			this.label.classList.toggle('show', true);
+		}
+
+		if (this.object)
+		{
+			// Used for positioning of label components
+			let matrix;
+
+			if (this.instance)
+			{
+				// Retrieve the transformation matrix for the clicked instance
+				var retrievedMatrix = new THREE.Matrix4();
+				this.object.getMatrixAt(this.instance, retrievedMatrix);
+
+				// Store position values in JSON
+				matrix = 
+				{
+					x: retrievedMatrix.elements[12],
+					y: 0,
+					z: retrievedMatrix.elements[14]
+				};
+			}
+			else
+			{
+				// Store position values in JSON
+				matrix =
+				{
+					x: this.object.position.x,
+					y: this.object.position.y,
+					z: this.object.position.z
+				};
+			}
+
+			// Create a dummy object to set the position of the label, projected into screen space
 			var dummy = new THREE.Object3D();
 			var tempVector = new THREE.Vector3();
-			dummy.position.set(this.matrix.x, 0, this.matrix.z);
+			dummy.position.set(matrix.x, matrix.y, matrix.z);
 			dummy.updateMatrix();
 			dummy.getWorldPosition(tempVector);
 			tempVector.project(this.mapScreen.camera);
@@ -255,7 +377,8 @@ class HTMLGenerator
 			let x = (tempVector.x *  .5 + .5) * this.mapScreen.canvas.clientWidth;
 			let y = (tempVector.y * -.5 + .5) * this.mapScreen.canvas.clientHeight;
 
-			this.newLabel.style.transform = `translate(-50%, -50%) translate(${x}px,${y}px)`;
+			// Translate the label to the correct position
+			this.label.style.transform = `translate(-50%, -50%) translate(${x  + this.horizontalOffset}px,${y}px)`;
 		}
 	}
 }

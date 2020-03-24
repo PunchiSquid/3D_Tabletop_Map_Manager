@@ -32,9 +32,14 @@ class MapScreen
 
 		// User interaction variables
 		this.brushSize = 1;
+		this.brushValue = 1;
 		this.activeSelectType = SelectTypes.SELECT;
 		this.html = new HTMLGenerator(this);
 
+		// Initialise modal objects to retrieve DOM elements and set up event listeners
+		this.processModal = new ProcessModal();
+		this.alertModal = new AlertModal();
+    
 		this.rendering = false;
 		this.DetermineSessionType();
 	}
@@ -82,6 +87,13 @@ class MapScreen
 		const controls = new THREE.OrbitControls(this.camera, this.canvas);
 		controls.target.set(this.xDimension / 2, 0, this.yDimension / 2);
 		controls.update();
+
+		document.addEventListener("DrawBlock", this.DrawBlock.bind(this));
+		document.addEventListener("SelectBlock", this.SelectBlock.bind(this));
+		document.addEventListener("AddCharacter", this.AddCharacter.bind(this));
+		document.addEventListener("CursorHover", this.PickHoveredObject.bind(this));
+		document.addEventListener("DeleteCharacter", this.DeleteCharacter.bind(this));
+		document.addEventListener("SetBlockHeight", this.SetBlockHeight.bind(this))
 	}
 
 	/*
@@ -95,65 +107,72 @@ class MapScreen
 
 		// Construct a new map and load from a file
 		this.mapMatrix = new Map();
+
+		this.processModal.Show("Loading map file, please wait.");
+
 		this.mapMatrix.LoadMap(id).then(function() 
 		{
-			// Set up the geometry
+			this.processModal.Hide();
+
+			// Set up the instanced box geometry
 			let boxGeometry = new THREE.BoxGeometry(1, 1, 1);
 			let instancedGeometry = new THREE.InstancedBufferGeometry();
 			instancedGeometry.fromGeometry(boxGeometry);
 
-			let hoverBoxGeometry = new THREE.CylinderGeometry( 0.5, 0.5, 2, 8 );
-			let hoverMaterial = new THREE.MeshPhongMaterial();
-			hoverMaterial.color = new THREE.Color("red");
-			hoverMaterial.opacity = 0.75;
-			hoverMaterial.transparent = true;
-
-			// Set up a colour buffer for the mesh
-			let material = new THREE.MeshPhongMaterial();
+			// Set up a colour buffer for the box mesh
+			let instancedMaterial = new THREE.MeshPhongMaterial();
 			instancedGeometry.setAttribute( 'color', new THREE.InstancedBufferAttribute( this.mapMatrix.colourArray, 3 ) );
-
-			material.vertexColors = THREE.VertexColors;
+			instancedMaterial.vertexColors = THREE.VertexColors;
 
 			// Set up the final instanced mesh and add to the scene
-			this.mesh = new THREE.InstancedMesh( instancedGeometry, material, this.count);
-			this.mesh.instanceMatrix.setUsage( THREE.DynamicDrawUsage ); // will be updated every frame
-			this.scene.add(this.mesh);
+			this.mapMesh = new THREE.InstancedMesh( instancedGeometry, instancedMaterial, this.count);
+			this.mapMesh.instanceMatrix.setUsage( THREE.DynamicDrawUsage ); // will be updated every frame
+			this.scene.add(this.mapMesh);
+
+			// Set up the character cylinder geometry and material
+			var characterGeometry = new THREE.CylinderGeometry( 0.75, 0, 2, 8 );
+			let characterMaterial = new THREE.MeshPhongMaterial();
+			characterMaterial.color = new THREE.Color("red");
+			characterMaterial.opacity = 0.75;
+			characterMaterial.transparent = true;
 
 			// Iterate through the height map and move instances to fill the generated map
-			let matrix = new THREE.Matrix4();
-			let offset = 0;
+			const matrix = new THREE.Matrix4();
 			const dummy = new THREE.Object3D();
+			let offset = 0;
 
 			for (let i = 0; i < this.mapMatrix.heightMap.length; i++)
 			{
 				for (let j = 0; j < this.mapMatrix.heightMap[i].length; j++)
-				{			
+				{
+					// Retrieve each instance transformation matrix
 					offset++;
-					this.mesh.getMatrixAt(offset, matrix);
+					this.mapMesh.getMatrixAt(offset, matrix);
 					let value = this.mapMatrix.heightMap[i][j];
 
-					if (this.mapMatrix.GetCharacter(i, j) != null)
-					{
-						let characterMesh = new THREE.Mesh( hoverBoxGeometry, hoverMaterial);
-						characterMesh.position.x = i;
-						characterMesh.position.z = j;
-						characterMesh.position.y = value + 1;
-						this.scene.add(characterMesh);
-					}
-
+					// Set a dummy object position to transform the instance being modified
 					dummy.position.set(i, value / 2, j);
 					dummy.updateMatrix();
 					dummy.matrix.elements[5] = value;
 					dummy.matrix.elements[13] = value / 2;
-					this.mesh.setMatrixAt( offset, dummy.matrix );
+					this.mapMesh.setMatrixAt( offset, dummy.matrix );
+
+					// If a character is present on a space, add a character token to that space in the render
+					if (this.mapMatrix.GetCharacter(i, j) != null)
+					{
+						let characterMesh = new THREE.Mesh( characterGeometry, characterMaterial);
+						characterMesh.position.set(i, value + 1.25, j);
+						characterMesh.name = "Character";
+						this.scene.add(characterMesh);
+					}
 				}
 			}
 
 			// Flag the matrix for updating
-			this.mesh.instanceMatrix.needsUpdate = true;
+			this.mapMesh.instanceMatrix.needsUpdate = true;
 
 			// Create a new helper class to assist in raycasting and object picking, then begin the render cycle
-			this.pickHelper = new InstancedObjectPicker(this.mapMatrix, this.scene, this.camera, this.html);
+			this.pickHelper = new InstancedObjectPicker(this.scene);
 			this.BeginRendering();
 
 		}.bind(this));
@@ -258,10 +277,13 @@ class MapScreen
 	*/
 	SaveMap()
 	{
+		this.processModal.Show("Saving map, please wait.");
+
 		this.mapMatrix.SaveMap().then(function()
 		{
-			console.log("Map Saved");
-		});
+			this.processModal.Hide();
+			this.alertModal.Show("Map Saved!");
+		}.bind(this));
 	}
 
 	/*
@@ -386,13 +408,127 @@ class MapScreen
 	}
 
 	/*
-	* Increases the height of a block in the height map, then re-renders the corresponding instance.
-	* @Param value The value to set to the height map
-	* @Param object The object to set the resultant matrix to
-	* @Param instance The instance to transform.
+	* Modifies the height of a block incrementally or decrementally in the heightmap and then modifies the associated instance matrix to re-render it.
 	*/
-	IncreaseHeightOfBlock(value, object, instance)
+	DrawBlock(e)
 	{
+		// Store event variables for shortened code
+		let object = this.mapMesh;
+		let instance = e.detail.instance;
+
+		// Internal function to increment the height of selected blocks
+		let modifyHeight = function()
+		{
+			let value;
+
+			// Increment or decrement based on selection type
+			if (this.activeSelectType == SelectTypes.ADD)
+			{
+				// Increase the height value of the corresponding element in the map matrix
+				value = this.mapMatrix.AddToHeight(matrix.elements[12], matrix.elements[14], this.brushValue);
+			}
+			else if (this.activeSelectType == SelectTypes.REMOVE)
+			{
+				// Decrease the height value of the corresponding element in the map matrix
+				value = this.mapMatrix.AddToHeight(matrix.elements[12], matrix.elements[14], -this.brushValue);
+			}
+
+			// Reposition characters on the selected block
+			this.RepositionCharacter(matrix.elements[12], value, matrix.elements[14]);
+
+			// Set corresponding values in the transformation matrix for the instance
+			matrix.elements[5] = value;
+			matrix.elements[13] = value / 2;
+
+			// Set the transformation matrix to the instance and flag it for updates
+			object.setMatrixAt(instanceValue, matrix);
+			object.instanceMatrix.needsUpdate = true;
+
+		}.bind(this);
+
+		// Retrieve the transformation matrix for the clicked instance
+		let originalMatrix = new THREE.Matrix4();
+		object.getMatrixAt(instance, originalMatrix);
+
+		// Iterate through the selected area, the size of the "brush"
+		for (let i = -Math.floor(this.brushSize / 2); i <= Math.floor(this.brushSize / 2); i++)
+		{
+			for (let j = -Math.floor(this.brushSize / 2); j <= Math.floor(this.brushSize / 2); j++)
+			{
+				// Calculate the instance ID based on an offset
+				var instanceValue = (instance + (i + (j * this.mapMatrix.mapXDimension)));
+
+				// Retrieve the transformation matrix for the clicked instance
+				var matrix = new THREE.Matrix4();
+				object.getMatrixAt(instanceValue, matrix);
+
+				// Ensure that the matrix is retrieved correctly
+				if (matrix.elements != null && (instanceValue > 0 && instanceValue < this.count))
+				{
+					// If iterating to the left of the center block, X value should be less
+					if (i < 0) {
+						if (matrix.elements[14] < originalMatrix.elements[14]) {
+							modifyHeight();
+						}
+					}
+
+					// If iterating to the right of the center block, X value should be more
+					else if (i > 0) {
+						if (matrix.elements[14] > originalMatrix.elements[14]) {
+							modifyHeight();
+						}
+					}
+
+					// if in the center
+					else { modifyHeight(); }
+				}
+			}
+		}
+	}
+
+	/*
+	* Selects a block on the grid, adding a HTML element to the area.
+	*/
+	SelectBlock(e)
+	{
+		// Store event variables for shortened code
+		let object = this.mapMesh;
+		let instance = e.detail.instance;
+
+		// Only select a block if an instance exists
+		if (instance)
+		{
+			// Retrieve the transformation matrix for the clicked instance
+			let matrix = new THREE.Matrix4();
+			object.getMatrixAt(instance, matrix);
+
+			// Retrieve the world position projected from the camera
+			let dummy = new THREE.Object3D();
+			let tempVector = new THREE.Vector3();
+			dummy.position.set(matrix.elements[12], 0, matrix.elements[14]);
+			dummy.updateMatrix();
+			dummy.getWorldPosition(tempVector);
+			tempVector.project(this.camera);
+
+			// Get screen space for placing HTML elements
+			let x = (tempVector.x *  .5 + .5) * this.canvas.clientWidth;
+			let y = (tempVector.y * -.5 + .5) * this.canvas.clientHeight;
+
+			// Add a label
+			this.html.AddLabel(x, y, object, instance);
+		}
+	}
+
+	/*
+	* Changes the height of a block in the height map, then re-renders the corresponding instance.
+	*/
+	SetBlockHeight(e)
+	{
+		// Store event variables for shortened code
+		let object = e.detail.object;
+		let instance = e.detail.instance;
+		let value = e.detail.value;
+
 		// Retrieve the transformation matrix for the clicked instance
 		var matrix = new THREE.Matrix4();
 		object.getMatrixAt(instance, matrix);
@@ -404,10 +540,182 @@ class MapScreen
 		matrix.elements[5] = returnedValue;
 		matrix.elements[13] = returnedValue / 2;
 
+		// Reposition characters on this block
+		this.RepositionCharacter(matrix.elements[12], returnedValue, matrix.elements[14])
+
 		// Set the transformation matrix to the instance and flag it for updates
 		object.setMatrixAt(instance, matrix);
 		object.instanceMatrix.needsUpdate = true;	
 		document.dispatchEvent(new Event("update_map"));
+	}
+
+	/*
+	* Adds or selects a character to / on the map
+	*/
+	AddCharacter(e)
+	{
+		// Store event variables for shortened code
+		let object = e.detail.object;
+		let instance = e.detail.instance;
+
+		// If the selected object is an instance of the grid blocks
+		if (!instance)
+		{
+			// Retrieve the transformation matrix for the clicked instance
+			let matrix = new THREE.Matrix4();
+			matrix = object.position;
+
+			// Retrieve the world position projected from the camera
+			let dummy = new THREE.Object3D();
+			let tempVector = new THREE.Vector3();
+			dummy.position.set(matrix.x, matrix.y, matrix.z);
+			dummy.updateMatrix();
+			dummy.getWorldPosition(tempVector);
+			tempVector.project(this.camera);
+
+			// Get screen space for placing HTML elements
+			let x = (tempVector.x *  .5 + .5) * this.canvas.clientWidth;
+			let y = (tempVector.y * -.5 + .5) * this.canvas.clientHeight;
+
+			// Add a label
+			this.html.AddCharacterLabel(x, y, object);
+		}
+
+		// If the selected object is a character
+		else
+		{
+			// Retrieve position
+			let matrix = new THREE.Matrix4();
+			object.getMatrixAt(instance, matrix);
+
+			let characterMesh;
+
+			// Produce a JSON transformation matrix for the clicked object
+			let locationMatrix = 
+			{
+				x: matrix.elements[12],
+				y: matrix.elements[13],
+				z: matrix.elements[14]
+			}
+
+			// If a character is not present, create a new one
+			if (this.mapMatrix.GetCharacter(locationMatrix.x, locationMatrix.z) == null)
+			{
+				// Set a material for the hovering box
+				let hoverMaterial = new THREE.MeshPhongMaterial();
+				hoverMaterial.color = new THREE.Color("red");;
+				hoverMaterial.opacity = 0.7;
+				hoverMaterial.transparent = true;
+
+				// Retrieve the height value from the map matrix
+				let value = this.mapMatrix.heightMap[locationMatrix.x][locationMatrix.z];
+
+				// Set character in the map
+				this.mapMatrix.AddCharacter(locationMatrix.x, locationMatrix.z);
+
+				// Set the dimensions of the cube
+				let hoverBoxGeometry = new THREE.CylinderGeometry( 0.75, 0, 2, 8 );
+
+				// Create the mesh, set the position and add to the this.scene
+				characterMesh = new THREE.Mesh( hoverBoxGeometry, hoverMaterial);
+				characterMesh.position.set(locationMatrix.x, value + 1.25, locationMatrix.z);
+				characterMesh.name = "Character";
+
+				// Add to the scene
+				this.scene.add(characterMesh);
+			}
+
+			// Retrieve the world position projected from the camera
+			let dummy = new THREE.Object3D();
+			let tempVector = new THREE.Vector3();
+			dummy.position.set(locationMatrix.x, locationMatrix.y, locationMatrix.z);
+			dummy.updateMatrix();
+			dummy.getWorldPosition(tempVector);
+			tempVector.project(this.camera);
+
+			// Get screen space for placing HTML elements
+			let x = (tempVector.x *  .5 + .5) * this.canvas.clientWidth;
+			let y = (tempVector.y * -.5 + .5) * this.canvas.clientHeight;
+
+			// Add a label
+			this.html.AddCharacterLabel(x, y, characterMesh);
+		}
+	}
+
+	/*
+	* Selects an object when the mouse hovers over an object.
+	*/
+	PickHoveredObject(e)
+	{
+		// Store event variables for shortened code
+		let instance = e.detail.instance;
+
+		if (instance)
+		{
+			// Retrieve the instance transformation matrix
+			let matrix = new THREE.Matrix4();
+			this.mapMesh.getMatrixAt(instance, matrix);
+
+			// Retrieve the height value from the map matrix
+			let value = this.mapMatrix.heightMap[matrix.elements[12]][matrix.elements[14]];
+
+			// Set the dimensions of the cube
+			let hoverBoxGeometry = new THREE.BoxGeometry(this.brushSize + 0.25, value + 0.25, this.brushSize + 0.25);
+
+			// Set a material for the hovering box
+			let hoverMaterial = new THREE.MeshPhongMaterial();
+			hoverMaterial.color = new THREE.Color("red");
+			hoverMaterial.opacity = 0.5;
+			hoverMaterial.transparent = true;
+
+			// Create the mesh, set the position and add to the this.scene
+			this.cursorMesh = new THREE.Mesh( hoverBoxGeometry, hoverMaterial);
+			this.cursorMesh.position.set(matrix.elements[12], matrix.elements[13], matrix.elements[14]);
+
+			this.scene.add(this.cursorMesh);
+		}
+	}
+
+	DeleteCharacter(e)
+	{
+		// Store event variables for shortened code
+		let object = e.detail.object;
+
+		// Set the character matrix in the corresponding position to null and remove the rendered object
+		this.mapMatrix.SetCharacter(object.position.x, object.position.z, null);
+		this.scene.remove(object);
+	}
+
+	RepositionCharacter(x, y, z)
+	{
+		// Iterate through every object in the scene
+		let count = this.scene.children.length;
+
+		for (let i = 0; i < count; i++)
+		{
+			let object = this.scene.children[i];
+
+			// If the object position matches the modified block, modify the object y value to match the new block height
+			if (object.position.x == x && object.position.z == z)
+			{
+				if (object.name == "Character")
+				{
+					object.position.y = y + 1;
+					break;
+				}
+			}
+		}
+	}
+
+	/*
+	* Helper method to remove temporary objects e.g. the cursor hover object
+	*/
+	ClearTemporaryObjects()
+	{
+		if (this.cursorMesh)
+		{
+			this.scene.remove(this.cursorMesh);
+		}
 	}
 
 	/*
@@ -416,6 +724,9 @@ class MapScreen
 	*/
 	Render(time)
 	{
+		// Clear the cursor mesh if it exists
+		this.ClearTemporaryObjects();
+
 		// Convert time to seconds and then half
 		time *= 0.001;
 		time *= 0.5;
@@ -427,9 +738,9 @@ class MapScreen
 		}
 		
 		this.html.MoveLabel();
-		this.pickHelper.ClearObjects(this.scene);
-		this.pickHelper.PickClickedObject(this.pickPosition, this.camera, this.mouseClicked, this.brushSize, this.activeSelectType);
-		this.pickHelper.PickHoveredObject(this.pickPosition, this.camera, this.brushSize);
+		this.pickHelper.ClearObjects();
+		this.pickHelper.PickClickedObject(this.pickPosition, this.camera, this.mouseClicked, this.activeSelectType);
+		this.pickHelper.PickHoveredObject(this.pickPosition, this.camera);
 		this.mouseClicked = false;
 
 		// Render the current frame and calculate the next frame
@@ -513,7 +824,7 @@ function SetPickPosition(event)
 {
 	const pos = GetCanvasRelativePosition(event);
 	screen.pickPosition.x = (pos.x / screen.canvas.clientWidth ) *  2 - 1;
-	screen.pickPosition.y = (pos.y / screen.canvas.clientHeight) * -2 + 1;  // note we flip Y
+	screen.pickPosition.y = (pos.y / screen.canvas.clientHeight) * -2 + 1;
 }
 
 /*
@@ -526,4 +837,79 @@ function SetClick(event)
 	{
 		screen.mouseClicked = true;
 	}
+}
+
+function SetButtonBorder()
+{
+	let selectButton = document.getElementById("button_select");
+	let addButton = document.getElementById("button_add");
+	let deleteButton = document.getElementById("button_delete");
+	let characterButton = document.getElementById("button_character");
+
+	selectButton.classList.toggle('active_button', false);
+	addButton.classList.toggle('active_button', false);
+	deleteButton.classList.toggle('active_button', false);
+	characterButton.classList.toggle('active_button', false);
+
+	switch(screen.activeSelectType)
+	{
+		case SelectTypes.SELECT:
+			selectButton.classList.toggle('active_button', true);
+			break;
+		case SelectTypes.ADD:
+			addButton.classList.toggle('active_button', true);
+			break;
+		case SelectTypes.REMOVE:
+			deleteButton.classList.toggle('active_button', true);
+			break;
+		case SelectTypes.CHARACTER:
+			characterButton.classList.toggle('active_button', true);
+			break;
+		default:
+			console.log("None");
+			break;
+	}
+}
+
+/*
+* Binds event listeners to DOM objects.
+*/
+function InitialiseEventListeners()
+{
+	screen.canvas.addEventListener('mousemove', SetPickPosition);
+	screen.canvas.addEventListener( 'mousedown', SetClick, false );
+
+	document.getElementById("button_select").addEventListener("click", function()
+	{
+		screen.activeSelectType = SelectTypes.SELECT;
+		screen.html.RemoveLabels();
+		SetButtonBorder();
+	});
+
+	document.getElementById("button_add").addEventListener("click", function()
+	{
+		screen.activeSelectType = SelectTypes.ADD;
+		screen.html.RemoveLabels();
+		screen.html.AddDrawMenu();
+		SetButtonBorder();
+	});
+
+	document.getElementById("button_delete").addEventListener("click", function()
+	{
+		screen.activeSelectType = SelectTypes.REMOVE;
+		screen.html.RemoveLabels();
+		SetButtonBorder();
+	});
+
+	document.getElementById("button_character").addEventListener("click", function()
+	{
+		screen.activeSelectType = SelectTypes.CHARACTER;
+		screen.html.RemoveLabels();
+		SetButtonBorder();
+	});
+
+	document.getElementById("button_save").addEventListener("click", function()
+	{
+		screen.SaveMap();
+	});
 }
