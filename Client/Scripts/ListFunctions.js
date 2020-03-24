@@ -42,6 +42,11 @@ function PopulateMapList()
             deleteButton.setAttribute("value", data[i]._id);
             buttonContainer.appendChild(deleteButton);
 
+            let hostButton = document.createElement("button");
+            hostButton.textContent = "Host";
+            hostButton.setAttribute("value", data[i]._id);
+            buttonContainer.appendChild(hostButton);
+
             if (data[i].name != null)
             {
                 name.textContent = data[i].name;
@@ -62,8 +67,14 @@ function PopulateMapList()
 
             $(editButton).click(function()
             {
+                $.cookie("SessionType", "edit");
                 window.location.href = "/editor/" + editButton.value;
-                console.log(editButton.value);
+            });
+
+            $(hostButton).click(function()
+            {
+                $.cookie("SessionType", "host");
+                window.location.href = "/editor/" + hostButton.value;
             });
         }
     });
@@ -85,6 +96,16 @@ function NewMapForm()
 
         NewMap(nameValue, descriptionValue);
     });
+}
+
+function JoinSession()
+{
+    let sessionID = document.getElementById("sessionID").value;
+
+    $.cookie("SessionType", "client");
+    $.cookie("SessionID", sessionID);
+
+    window.location.href = "/editor/" + "client";
 }
 
 function NewMap(name, description)
