@@ -24,8 +24,14 @@
 </head>
 
 <body>
-    <canvas class="dice_canvas" id="c"></canvas>    
-    <button id="newButton" onclick="NewMapForm()">New Map</button>
+	<canvas class="dice_canvas" id="c"></canvas>
+	
+	<button id="newButton" onclick="NewMapForm()">New Map</button>
+
+	<span style="color: white;">Session ID:</span>
+	<input type="text" id="sessionID" name="sessionID">
+	<button id="joinButton" onclick="JoinSession()">Join Session</button>
+
 	<div id="map_list"></div>
 	
 	<!-- Modal content -->
