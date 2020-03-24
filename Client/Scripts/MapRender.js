@@ -35,6 +35,7 @@ class MapScreen
 		this.activeSelectType = SelectTypes.SELECT;
 		this.html = new HTMLGenerator(this);
 
+		this.rendering = false;
 		this.DetermineSessionType();
 	}
 
@@ -86,7 +87,7 @@ class MapScreen
 	/*
 	* Load a map from the database based on the URL parameters
 	*/
-	LoadMap()
+	LoadMapFromDatabase()
 	{
 		// Retrieve the last part of the URL, the ID
 		let urlParameter = document.location.href.split('/');
@@ -158,6 +159,100 @@ class MapScreen
 		}.bind(this));
 	}
 
+	LoadMapFromWebSocket()
+	{
+		this.socket.emit("client_request_map");
+
+		this.socket.on("server_send_map", function(map)
+		{
+			// Load the map and construct a new scene
+			this.mapMatrix.LoadFromRecord(map);
+			this.scene = new THREE.Scene();
+
+			// Set up the geometry
+			let boxGeometry = new THREE.BoxGeometry(1, 1, 1);
+			let instancedGeometry = new THREE.InstancedBufferGeometry();
+			instancedGeometry.fromGeometry(boxGeometry);
+
+			let hoverBoxGeometry = new THREE.CylinderGeometry( 0.5, 0.5, 2, 8 );
+			let hoverMaterial = new THREE.MeshPhongMaterial();
+			hoverMaterial.color = new THREE.Color("red");
+			hoverMaterial.opacity = 0.75;
+			hoverMaterial.transparent = true;
+
+			// Set up a colour buffer for the mesh
+			let material = new THREE.MeshPhongMaterial();
+			instancedGeometry.setAttribute( 'color', new THREE.InstancedBufferAttribute( this.mapMatrix.colourArray, 3 ) );
+
+			material.vertexColors = THREE.VertexColors;
+
+			// Create directional light source
+			const color = 0xFFFFFF;
+			const intensity = 1;
+
+			var light = new THREE.DirectionalLight(color, intensity);
+			light.position.set(3, 2, 2);
+			light.target.position.set(0, 0, 0);
+			this.scene.add(light);
+			this.scene.add(light.target);
+
+			var light = new THREE.DirectionalLight(color, intensity);
+			light.position.set(-3, 2, -2);
+			light.target.position.set(0, 0, 0);
+			this.scene.add(light);
+			this.scene.add(light.target);
+
+			// Set up the final instanced mesh and add to the scene
+			this.mesh = new THREE.InstancedMesh( instancedGeometry, material, this.count);
+			this.mesh.instanceMatrix.setUsage( THREE.DynamicDrawUsage ); // will be updated every frame
+			this.scene.add(this.mesh);
+
+			// Iterate through the height map and move instances to fill the generated map
+			let matrix = new THREE.Matrix4();
+			let offset = 0;
+			const dummy = new THREE.Object3D();
+
+			for (let i = 0; i < this.mapMatrix.heightMap.length; i++)
+			{
+				for (let j = 0; j < this.mapMatrix.heightMap[i].length; j++)
+				{			
+					offset++;
+					this.mesh.getMatrixAt(offset, matrix);
+					let value = this.mapMatrix.heightMap[i][j];
+
+					if (this.mapMatrix.GetCharacter(i, j) != null)
+					{
+						let characterMesh = new THREE.Mesh( hoverBoxGeometry, hoverMaterial);
+						characterMesh.position.x = i;
+						characterMesh.position.z = j;
+						characterMesh.position.y = value + 1;
+						this.scene.add(characterMesh);
+					}
+
+					dummy.position.set(i, value / 2, j);
+					dummy.updateMatrix();
+					dummy.matrix.elements[5] = value;
+					dummy.matrix.elements[13] = value / 2;
+					this.mesh.setMatrixAt( offset, dummy.matrix );
+				}
+			}
+
+			// Flag the matrix for updating
+			this.mesh.instanceMatrix.needsUpdate = true;
+
+			// Create a new helper class to assist in raycasting and object picking, then begin the render cycle
+			this.pickHelper = new InstancedObjectPicker(this.mapMatrix, this.scene, this.camera, this.html);
+
+			// If the render loop has not yet been started, begin rendering
+			if (this.rendering == false)
+			{
+				this.rendering = true;
+				this.BeginRendering();
+			}
+
+		}.bind(this));
+	}
+
 	/*
 	* Save the current map to the database
 	*/
@@ -208,19 +303,60 @@ class MapScreen
 	*/
 	HostSessionInitialise()
 	{
+		this.sessionType = SessionTypes.HOST;
+
+		// Initialise environment
 		this.InitialiseScene();
-		this.LoadMap();
+		this.LoadMapFromDatabase();
 		this.InitialiseEventListeners();
+
+		// Connect and create a session
+		this.socket = io.connect('http://localhost');
+		this.socket.emit("create_session");
+
+		// Set up event handlers if the session is successfully created
+		this.socket.on("session_created_successfully", function()
+		{
+			console.log(this.socket.id);
+
+			// If the server requests map data, send
+			this.socket.on("server_request_map", function()
+			{
+				this.socket.emit("host_send_map", this.mapMatrix);
+			}.bind(this));
+		}.bind(this));
+
+		document.addEventListener("update_map", function()
+		{
+			this.socket.emit("host_send_map", this.mapMatrix);
+
+		}.bind(this));
 	}
 
 	/*
 	* Initialises the editor for client session joining
 	*/
-	CientSessionInitialise()
+	ClientSessionInitialise()
 	{
-		this.InitialiseScene();
-		this.LoadMap();
-		this.InitialiseEventListeners();
+		this.sessionType = SessionTypes.CLIENT;
+
+		// Retrieve the session ID cookie
+		let sessionID = $.cookie("SessionID");
+
+		// Connect and create a session
+		this.socket = io.connect('http://localhost');
+		this.socket.emit("join_session", sessionID);
+
+		// Set up event handlers if the session is successfully joined
+		this.socket.on("session_joined_successfully", function()
+		{
+			// Initialise environment
+			this.mapMatrix = new Map();
+			this.InitialiseScene();
+			this.LoadMapFromWebSocket();
+			this.InitialiseEventListeners();
+
+		}.bind(this));
 	}
 
 	/*
@@ -228,8 +364,10 @@ class MapScreen
 	*/
 	EditSessionInitialise()
 	{
+		this.sessionType = SessionTypes.EDIT;
+
 		this.InitialiseScene();
-		this.LoadMap();
+		this.LoadMapFromDatabase();
 		this.InitialiseEventListeners();
 	}
 
@@ -269,6 +407,7 @@ class MapScreen
 		// Set the transformation matrix to the instance and flag it for updates
 		object.setMatrixAt(instance, matrix);
 		object.instanceMatrix.needsUpdate = true;	
+		document.dispatchEvent(new Event("update_map"));
 	}
 
 	/*

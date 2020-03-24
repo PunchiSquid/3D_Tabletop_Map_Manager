@@ -62,7 +62,32 @@ io.use(sharedSession(session,
 
 io.on("connection", function (socket)
 {
-	console.log(socket.handshake.session.userID);
+	socket.on("create_session", function()
+	{
+		// Set the host ID of the room as the socket ID of the creating user
+		io.sockets.adapter.rooms[socket.id].hostID = socket.id;
+		socket.emit("session_created_successfully");
+	});
+
+	socket.on("join_session", function(sessionID)
+	{
+		// Join the room, then set the current session ID for easy access
+		socket.join(sessionID);
+		socket.currentSession = sessionID;
+		socket.emit("session_joined_successfully");
+	})
+
+	socket.on("client_request_map", function()
+	{
+		// Direct a client request to the host
+		socket.to(socket.currentSession).emit("server_request_map");
+	});
+
+	socket.on("host_send_map", function(map)
+	{
+		// Direct a host map file to all clients
+		socket.to(socket.id).emit("server_send_map", map);
+	});
 });
 
 /***************/
