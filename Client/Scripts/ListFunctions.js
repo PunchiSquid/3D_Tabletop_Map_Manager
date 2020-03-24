@@ -98,6 +98,16 @@ function NewMapForm()
     });
 }
 
+function JoinSession()
+{
+    let sessionID = document.getElementById("sessionID").value;
+
+    $.cookie("SessionType", "client");
+    $.cookie("SessionID", sessionID);
+
+    window.location.href = "/editor/" + "client";
+}
+
 function NewMap(name, description)
 {
 	let map = new Map();
