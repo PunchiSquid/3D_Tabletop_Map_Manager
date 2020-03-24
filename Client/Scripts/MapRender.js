@@ -6,6 +6,13 @@ SelectTypes =
 	CHARACTER: "character"
 };
 
+SessionTypes = 
+{
+	HOST: "host",
+	CLIENT: "client",
+	EDIT: "edit"
+};
+
 class MapScreen
 {
 	constructor()
@@ -27,6 +34,8 @@ class MapScreen
 		this.brushSize = 1;
 		this.activeSelectType = SelectTypes.SELECT;
 		this.html = new HTMLGenerator(this);
+
+		this.DetermineSessionType();
 	}
 
 	/*
@@ -161,6 +170,70 @@ class MapScreen
 	}
 
 	/*
+	* Determines the type of session and the initialisation process to carry out
+	*/
+	DetermineSessionType()
+	{
+		// Retrieve the session type cookie
+		let sessionCookie = $.cookie("SessionType");
+		
+		// If the cookie exists, determine the session type and initialise, otherwise direct back to the list page
+		if (sessionCookie != null)
+		{
+			$.removeCookie("SessionType");
+
+			switch(sessionCookie)
+			{
+				case SessionTypes.HOST:
+					this.HostSessionInitialise();
+					break;
+
+				case SessionTypes.CLIENT:
+					this.ClientSessionInitialise();
+					break;
+
+				case SessionTypes.EDIT:
+					this.EditSessionInitialise();
+					break;
+			}
+		}
+		else
+		{
+			window.location.href = "/list";
+		}
+	}
+
+	/*
+	* Initialises the editor for session hosting
+	*/
+	HostSessionInitialise()
+	{
+		this.InitialiseScene();
+		this.LoadMap();
+		this.InitialiseEventListeners();
+	}
+
+	/*
+	* Initialises the editor for client session joining
+	*/
+	CientSessionInitialise()
+	{
+		this.InitialiseScene();
+		this.LoadMap();
+		this.InitialiseEventListeners();
+	}
+
+	/*
+	* Initialises the editor for map editing
+	*/
+	EditSessionInitialise()
+	{
+		this.InitialiseScene();
+		this.LoadMap();
+		this.InitialiseEventListeners();
+	}
+
+	/*
 	* Modifies the camera projection matrix and the canvas rendering resolution
 	* to account for modified canvas size.
 	*/
@@ -233,12 +306,48 @@ class MapScreen
 		// Begin rendering loop
 		requestAnimationFrame(this.render);
 	}
+
+	/*
+	* Binds event listeners to DOM objects.
+	*/
+	InitialiseEventListeners()
+	{
+		this.canvas.addEventListener('mousemove', SetPickPosition);
+		this.canvas.addEventListener( 'mousedown', SetClick, false );
+
+		document.getElementById("button_select").addEventListener("click", function()
+		{
+			this.activeSelectType = SelectTypes.SELECT;
+
+		}.bind(this));
+
+		document.getElementById("button_add").addEventListener("click", function()
+		{
+			this.activeSelectType = SelectTypes.ADD;
+
+		}.bind(this));
+
+		document.getElementById("button_delete").addEventListener("click", function()
+		{
+			this.activeSelectType = SelectTypes.REMOVE;
+
+		}.bind(this));
+
+		document.getElementById("button_character").addEventListener("click", function()
+		{
+			this.activeSelectType = SelectTypes.CHARACTER;
+
+		}.bind(this));
+
+		document.getElementById("button_save").addEventListener("click", function()
+		{
+			this.SaveMap();
+
+		}.bind(this));
+	}
 }
 
 var screen = new MapScreen();
-screen.InitialiseScene();
-screen.LoadMap();
-InitialiseEventListeners();
 
 // External event handlers and listeners
 
@@ -278,38 +387,4 @@ function SetClick(event)
 	{
 		screen.mouseClicked = true;
 	}
-}
-
-/*
-* Binds event listeners to DOM objects.
-*/
-function InitialiseEventListeners()
-{
-	screen.canvas.addEventListener('mousemove', SetPickPosition);
-	screen.canvas.addEventListener( 'mousedown', SetClick, false );
-
-	document.getElementById("button_select").addEventListener("click", function()
-	{
-		screen.activeSelectType = SelectTypes.SELECT;
-	});
-
-	document.getElementById("button_add").addEventListener("click", function()
-	{
-		screen.activeSelectType = SelectTypes.ADD;
-	});
-
-	document.getElementById("button_delete").addEventListener("click", function()
-	{
-		screen.activeSelectType = SelectTypes.REMOVE;
-	});
-
-	document.getElementById("button_character").addEventListener("click", function()
-	{
-		screen.activeSelectType = SelectTypes.CHARACTER;
-	});
-
-	document.getElementById("button_save").addEventListener("click", function()
-	{
-		screen.SaveMap();
-	});
 }
