@@ -1,10 +1,12 @@
 // Node package require statements
 const express = require("express");
 const cookieParser = require('cookie-parser');
-const session = require("client-sessions");
 const http = require("http");
-const MongoClient = require('mongodb').MongoClient;
 const fs = require('fs');
+const app = express();
+const server = http.createServer(app);
+const io = require('socket.io')(server);
+const MongoClient = require('mongodb').MongoClient;
 
 // Require custom node modules
 const MongoConnection = require('./databaseFunctions');
@@ -17,16 +19,11 @@ let connection = JSON.parse(rawdata);
 // Port used to listen for connections 
 // If hosted on Heroku, the port is defined by the service
 // If hosted locally the port is 9000
-const port = process.env.PORT || 9000;
+const serverPort = process.env.PORT || 9000;
+const websocketPort = process.env.PORT || 80;
 
 // MongoDB URI
 const uri = connection.uri;
-
-// Initialise the Express app.
-app = express();
-
-// Create HTTP server.
-server = http.createServer(app);
 
 // Set up express to parse JSON data from a request body
 app.use(express.json({limit: '50MB', parameterLimit: 1000000, extended: true}));
@@ -36,19 +33,62 @@ app.use(express.urlencoded({limit: '50MB', parameterLimit: 1000000, extended: tr
 app.use(cookieParser());
 
 // Set up session variables
-app.use(session
+const session = require("express-session")
 ({
-	cookieName: "map_session",
 	secret: connection.session,
-	duration: 60 * 60 * 1000,
-	activeDuration: 60 * 60 * 1000
-}));
+	resave: true,
+	saveUninitialized: true
+});
+
+const sharedSession = require("express-socket.io-session");
 
 // Set up static routes
 app.use(express.static(__dirname + '/../Client/Scripts/'));
 app.use(express.static(__dirname + '/../Client/Stylesheets/'));
 app.use(express.static(__dirname + '/../External Libraries/'));
 app.use(express.static(__dirname + '/../Resources/'));
+
+// Use express-sessions middleware
+app.use(session);
+
+io.use(sharedSession(session, 
+{
+	autoSave: true
+}));
+
+/****************************/
+/* Websockets functionality */
+/****************************/
+
+io.on("connection", function (socket)
+{
+	socket.on("create_session", function()
+	{
+		// Set the host ID of the room as the socket ID of the creating user
+		io.sockets.adapter.rooms[socket.id].hostID = socket.id;
+		socket.emit("session_created_successfully");
+	});
+
+	socket.on("join_session", function(sessionID)
+	{
+		// Join the room, then set the current session ID for easy access
+		socket.join(sessionID);
+		socket.currentSession = sessionID;
+		socket.emit("session_joined_successfully");
+	})
+
+	socket.on("client_request_map", function()
+	{
+		// Direct a client request to the host
+		socket.to(socket.currentSession).emit("server_request_map");
+	});
+
+	socket.on("host_send_map", function(map)
+	{
+		// Direct a host map file to all clients
+		socket.to(socket.id).emit("server_send_map", map);
+	});
+});
 
 /***************/
 /* Page Routes */
@@ -75,11 +115,11 @@ app.get("/list", function(request, response)
 // Placeholder secure route
 app.get("/editor/:mapID", function(request, response)
 {
-	if (request.map_session)
+	if (request.session.userID)
 	{
 		// Check the username in the session exists on the database
 		let connection = new MongoConnection(uri);
-		connection.GetUserAccountByUsername(request.map_session.username).then(function(res)
+		connection.GetUserAccountByUsername(request.session.username).then(function(res)
 		{
 			if (res)
 			{
@@ -88,7 +128,7 @@ app.get("/editor/:mapID", function(request, response)
 			else
 			{
 				// Reset user session if the account does not exist. 
-				request.map_session.reset();
+				request.session.destroy();
 				response.cookie("Alert", "Session invalid. Please log in.", {maxAge: 30000});
 				response.redirect("/");
 			}
@@ -104,6 +144,12 @@ app.get("/editor/:mapID", function(request, response)
 		response.cookie("Alert", "Session invalid. Please log in.", {maxAge: 30000});
 		response.redirect("/");
 	}
+});
+
+// Testing route
+app.get("/test", function(request, response)
+{
+	response.sendFile("/Client/secure.html", {"root": __dirname + "/../"});
 });
 
 /**************/
@@ -129,8 +175,8 @@ app.post("/login", function(request, response)
 	{
 		if (res.result == true)
 		{
-			request.map_session.username = request.body.username;
-			request.map_session.userID = res._id;
+			request.session.username = request.body.username;
+			request.session.userID = res._id;
 			response.redirect("/list");
 		}
 		else
@@ -211,13 +257,13 @@ app.post("/user-accounts", function(request, response)
 // Route to retrieve a list of map records
 app.get("/maplist", function(request, response)
 {
-	if (request.map_session)
+	if (request.session.userID)
 	{
 		// Create a MongoDB connection
 		let connection = new MongoConnection(uri);
 
 		// Retrieve records
-		connection.GetMapRecords(request.map_session.userID).then(function(res)
+		connection.GetMapRecords(request.session.userID).then(function(res)
 		{
 			response.cookie("Alert", "Maps retrieved!", {maxAge: 30000});
 			response.send(res);
@@ -238,7 +284,7 @@ app.get("/maplist", function(request, response)
 // Route to insert new map record
 app.post("/maps", function(request, response)
 {
-	if (request.map_session)
+	if (request.session.userID)
 	{
 		// Create a MongoDB connection
 		let body = request.body;
@@ -246,7 +292,7 @@ app.post("/maps", function(request, response)
 
 		// Convert request body data into a more easily usable object form
 		let inputMap = JSON.parse(body.map);
-		let inputUserID = request.map_session.userID;
+		let inputUserID = request.session.userID;
 
 		// Add the record
 		connection.AddMapRecord(inputMap, inputUserID).then(function(res)
@@ -309,57 +355,13 @@ app.put("/map", function(request, response)
 	});
 });
 
-// HelloWorld route
-app.get("/HelloWorld", function(request, response)
+// Listen for connections
+app.listen(serverPort, function()
 {
-	// Set up connection variables
-	var client = new MongoClient(uri, { useNewUrlParser: true });
-	
-	// Connect to the MongoDB instance
-	client.connect().then(function(dbResponse)
-	{
-		// Retrieve database record
-		var dbObject = dbResponse.db("HelloWorld");
-		
-		try
-		{
-			// Create the "HelloWorld" collection
-			dbObject.createCollection("HelloWorld").then(function(res)
-			{
-				// Insert test record
-				dbObject.collection("HelloWorld").insertOne( {data: "Hello World"} ).then(function(res)
-				{
-					client.close();
-					response.send(res);	
-				})
-				.catch(function(err)
-				{
-					client.close();
-					response.send("Failed on insertion " + err);
-				});
-			})
-			.catch(function(err)
-			{
-				client.close();
-				response.send("Failed on creation " + err);
-			});
-		}
-		catch(err)
-		{
-			client.close();
-			response.send("Exception caught " + err);
-			
-		};
-	})
-	.catch(function(err)
-	{
-		client.close();
-		response.send("Failed on MongoDB connection " + err);
-	});
+	console.log("Listening for HTTP requests on " + serverPort);
 });
 
-// Listen for connections
-server.listen(port, function()
+server.listen(websocketPort, function()
 {
-	console.log("Listening on " + port);
+	console.log("Listening for Websocket requests on port " + websocketPort + " ...");
 });
