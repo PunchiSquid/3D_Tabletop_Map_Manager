@@ -207,6 +207,14 @@ class Map
 		return(this.heightMap[x][y]);
 	}
 
+	/*
+	* Sets the height map value at the specified location on the heightmap, 
+	* then returns the resultant value.
+	* @Param x The X index on the matrix.
+	* @Param y The Y index on the matrix.
+	* @Param height The value to set to the heightmap
+	* @Returns The resultant value after incrementing.
+	*/
 	SetHeight(x, y, height)
 	{
 		if (height > 0)
@@ -214,47 +222,132 @@ class Map
 			this.heightMap[x][y] = height;
 		}
 
+		document.dispatchEvent(new Event("UpdateMap"));
 		return(this.heightMap[x][y]);
 	}
 
+	/*
+	* Retrieves the height map value at the specified location on the heightmap.
+	* @Param x The X index on the matrix.
+	* @Param y The Y index on the matrix.
+	* @Returns The value at the specified indices.
+	*/
 	GetHeight(x, y)
 	{
 		return(this.heightMap[x][y]);
 	}
 
+	/*
+	* Retrieves the description value at the specified location on the description matrix.
+	* @Param x The X index on the matrix.
+	* @Param y The Y index on the matrix.
+	* @Returns The value at the specified indices.
+	*/
 	GetDescription(x, y)
 	{
 		return(this.detailMatrix[x][y]);
 	}
 
+	/*
+	* Sets the description value at the specified location on the description matrix.
+	* @Param x The X index on the matrix.
+	* @Param y The Y index on the matrix.
+	* @Param value The value to set to the description matrix.
+	*/
 	SetDescription(x, y, value)
 	{
 		if (value)
 		{
 			this.detailMatrix[x][y] = String(value);
+			document.dispatchEvent(new Event("UpdateMap"));
 		}
 	}
 
+	/*
+	* Creates a new character instance at the specified location on the character matrix.
+	* @Param x The X index on the matrix.
+	* @Param y The Y index on the matrix.
+	*/
 	AddCharacter(x, y)
 	{
 		if (this.characterMatrix[x][y] == null)
 		{
 			let character = new Character();
 			this.characterMatrix[x][y] = character;
+			document.dispatchEvent(new Event("UpdateMap"));
 		}
 	}
 
+	/*
+	* Retrieves a character instance at the specified location on the character matrix.
+	* @Param x The X index on the matrix.
+	* @Param y The Y index on the matrix.
+	* @Returns The character instance at the specified indices.
+	*/
 	GetCharacter(x, y)
 	{
 		return this.characterMatrix[x][y];
 	}
 
+	/*
+	* Sets a character instance at the specified location on the character matrix.
+	* @Param x The X index on the matrix.
+	* @Param y The Y index on the matrix.
+	* @Param value The character instance to set at the specified location.
+	*/
 	SetCharacter(x, y, value)
 	{
 		// Only allow valid characters with properties or empty records for deletion
 		if (value == null || (value.name && value.description))
 		{
 			this.characterMatrix[x][y] = value;	
+			document.dispatchEvent(new Event("UpdateMap"));
 		}
 	}
+
+	/*
+	* Sets the name value of a character instance at the specified location on the character matrix.
+	* @Param x The X index on the matrix.
+	* @Param y The Y index on the matrix.
+	* @Param name Name value to set at the specified location.
+	*/
+	SetCharacterName(x, y, name)
+    {
+        this.characterMatrix[x][y].name = name;
+        document.dispatchEvent(new Event("UpdateMap"));
+    }
+
+	/*
+	* Retrieves the name value of a character instance at the specified location on the character matrix.
+	* @Param x The X index on the matrix.
+	* @Param y The Y index on the matrix.
+	* @Returns The name property of the character instance at the specified indices.
+	*/
+    GetCharacterName(x, y)
+    {
+        return(this.characterMatrix[x][y].name);
+    }
+
+	/*
+	* Sets the notes value of a character instance at the specified location on the character matrix.
+	* @Param x The X index on the matrix.
+	* @Param y The Y index on the matrix.
+	* @Param name The descriptive value to set at the specified location.
+	*/
+    SetCharacterNotes(x, y, notes)
+    {
+        this.characterMatrix[x][y].notes = notes;
+        document.dispatchEvent(new Event("UpdateMap"));
+    }
+
+	/*
+	* Sets the name value of a character instance at the specified location on the character matrix.
+	* @Param x The X index on the matrix.
+	* @Param y The Y index on the matrix.
+	* @Returns The notes property of the character instance at the specified indices.
+	*/
+    GetCharacterNotes(x, y)
+    {
+        return(this.characterMatrix[x][y].notes);
+    }
 }
