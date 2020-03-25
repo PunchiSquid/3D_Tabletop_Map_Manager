@@ -93,7 +93,7 @@ class HTMLGenerator
 		const nameModFunction = function()
 		{
 			let value = nameForm.value;
-			this.mapScreen.mapMatrix.characterMatrix[this.object.position.x][this.object.position.z].name = value;
+			this.mapScreen.mapMatrix.SetCharacterName(this.object.position.x, this.object.position.z, value);
 		}
 
 		/*
@@ -103,7 +103,7 @@ class HTMLGenerator
 		{
 			// Increase the height value of the corresponding element in the map matrix
 			let value = notesForm.value;
-			this.mapScreen.mapMatrix.characterMatrix[this.object.position.x][this.object.position.z].notes = value;
+			this.mapScreen.mapMatrix.SetCharacterNotes(this.object.position.x, this.object.position.z, value);
 		}
 
 		/*
@@ -301,7 +301,6 @@ class HTMLGenerator
 			if ((sizeValue % 2) == 0)
 			{
 				sizeValue += 1;
-				console.log(sizeValue);
 				brushSizeForm.value = sizeValue;
 			}
 
