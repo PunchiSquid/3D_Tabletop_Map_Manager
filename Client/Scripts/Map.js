@@ -298,7 +298,7 @@ class Map
 	SetCharacter(x, y, value)
 	{
 		// Only allow valid characters with properties or empty records for deletion
-		if (value == null || (value.name && value.description))
+		if (value == null || (value.name && value.notes))
 		{
 			this.characterMatrix[x][y] = value;	
 			document.dispatchEvent(new Event("UpdateMap"));
