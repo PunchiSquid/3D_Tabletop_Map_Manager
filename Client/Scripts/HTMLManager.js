@@ -71,6 +71,10 @@ class HTMLGenerator
 		closeButton.setAttribute("type", "button");
 		closeButton.setAttribute("value", "Close");
 
+		let moveButton = document.createElement("input");
+		moveButton.setAttribute("type", "button");
+		moveButton.setAttribute("value", "Move");
+
 		let deleteButton = document.createElement("input");
 		deleteButton.setAttribute("type", "button");
 		deleteButton.setAttribute("value", "Delete");
@@ -82,6 +86,7 @@ class HTMLGenerator
 		this.label.appendChild(notesTitle);
 		this.label.appendChild(notesForm);
 		this.label.appendChild(closeButton);
+		this.label.appendChild(moveButton);
 		this.label.appendChild(deleteButton);
 
 		// Transform the new element with CSS
@@ -119,6 +124,16 @@ class HTMLGenerator
 			this.RemoveLabels();
 		}
 
+		const moveCharacterFunction = function()
+		{
+			// Dispatch a MoveCharacter event to the document
+			let detail = { object: this.object };
+			let event = new CustomEvent("MoveCharacter", { detail: detail });
+			document.dispatchEvent(event);
+
+			this.RemoveLabels();
+		}
+
 		/*
 		* Internal function for closing labels when the close button is clicked.
 		*/
@@ -131,6 +146,7 @@ class HTMLGenerator
 		nameForm.addEventListener('input', nameModFunction.bind(this));
 		notesForm.addEventListener('input', notesModFunction.bind(this));
 		closeButton.addEventListener('mousedown', closeLabelFunction.bind(this));
+		moveButton.addEventListener('mousedown', moveCharacterFunction.bind(this));
 		deleteButton.addEventListener('mousedown', deleteCharacterFunction.bind(this));
 	}
 

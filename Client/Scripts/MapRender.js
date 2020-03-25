@@ -95,11 +95,15 @@ class MapScreen
 		document.addEventListener("DeleteCharacter", this.DeleteCharacter.bind(this));
 		document.addEventListener("SetBlockHeight", this.SetBlockHeight.bind(this))
 		document.addEventListener("UpdateMap", this.UpdateMap.bind(this));
+		document.addEventListener("MoveCharacter", this.PickUpCharacter.bind(this));
 	}
 
 	UpdateMap()
 	{
-		this.socket.emit("host_send_map", this.mapMatrix);
+		if (this.sessionType == SessionTypes.HOST)
+		{
+			this.socket.emit("host_send_map", this.mapMatrix);
+		}
 	}
 
 	/*
@@ -591,6 +595,19 @@ class MapScreen
 		document.dispatchEvent(new Event("UpdateMap"));
 	}
 
+	PickUpCharacter(e)
+	{
+		// Store event variables for shortened code
+		let object = e.detail.object;
+
+		// Store the character temporarily
+		this.pickedUpCharacter = this.mapMatrix.GetCharacter(object.position.x, object.position.z);
+
+		// Set the character matrix in the corresponding position to null and remove the rendered object
+		this.mapMatrix.SetCharacter(object.position.x, object.position.z, null);
+		this.scene.remove(object);
+	}
+
 	/*
 	* Adds or selects a character to / on the map
 	*/
@@ -645,6 +662,18 @@ class MapScreen
 			// If a character is not present, create a new one
 			if (this.mapMatrix.GetCharacter(locationMatrix.x, locationMatrix.z) == null)
 			{
+				if (this.pickedUpCharacter)
+				{
+					// Set picked up character in the map
+					this.mapMatrix.SetCharacter(locationMatrix.x, locationMatrix.z, this.pickedUpCharacter);
+					this.pickedUpCharacter = null;
+				}
+				else
+				{
+					// Set new character in the map
+					this.mapMatrix.AddCharacter(locationMatrix.x, locationMatrix.z);
+				}
+
 				// Set a material for the hovering box
 				let hoverMaterial = new THREE.MeshPhongMaterial();
 				hoverMaterial.color = new THREE.Color("red");;
@@ -653,9 +682,6 @@ class MapScreen
 
 				// Retrieve the height value from the map matrix
 				let value = this.mapMatrix.heightMap[locationMatrix.x][locationMatrix.z];
-
-				// Set character in the map
-				this.mapMatrix.AddCharacter(locationMatrix.x, locationMatrix.z);
 
 				// Set the dimensions of the cube
 				let hoverBoxGeometry = new THREE.CylinderGeometry( 0.75, 0, 2, 8 );
