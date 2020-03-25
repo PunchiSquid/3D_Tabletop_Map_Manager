@@ -65,7 +65,7 @@ class MapScreen
 
 		// Construct new Scene
 		this.scene = new THREE.Scene();
-		this.scene.background = new THREE.Color(0x330033);
+		this.scene.background = new THREE.Color(0x6bfff8);
 
 		// Create directional light source
 		const color = 0xFFFFFF;
@@ -125,13 +125,38 @@ class MapScreen
 			let instancedGeometry = new THREE.InstancedBufferGeometry();
 			instancedGeometry.fromGeometry(boxGeometry);
 
+			var topTexture = new THREE.TextureLoader().load("/tex.png");
+			topTexture.magFilter = THREE.NearestFilter;
+			var sideTexture = new THREE.TextureLoader().load("/texSide.png");
+			sideTexture.magFilter = THREE.NearestFilter;
+			sideTexture.wrapS = THREE.RepeatWrapping;
+			sideTexture.wrapT = THREE.RepeatWrapping;
+			sideTexture.repeat.set(2, 12);
+
+			var instancedMaterials = 
+			[
+				new THREE.MeshPhongMaterial( { map: sideTexture }),
+				new THREE.MeshPhongMaterial( { map: sideTexture }),
+				new THREE.MeshPhongMaterial( { map: topTexture }),
+				new THREE.MeshPhongMaterial( { map: sideTexture }),
+				new THREE.MeshPhongMaterial( { map: sideTexture }),
+				new THREE.MeshPhongMaterial( { map: sideTexture }),
+			];
+
+			var texture = new THREE.TextureLoader().load("/tex.png");
+			var loader = new THREE.TextureLoader();
+			texture.wrapS = THREE.RepeatWrapping;
+			texture.wrapT = THREE.RepeatWrapping;
+			texture.minFilter = THREE.NearestFilter;
+			//texture.repeat.set(4, 4);
+
 			// Set up a colour buffer for the box mesh
-			let instancedMaterial = new THREE.MeshPhongMaterial();
-			instancedGeometry.setAttribute( 'color', new THREE.InstancedBufferAttribute( this.mapMatrix.colourArray, 3 ) );
-			instancedMaterial.vertexColors = THREE.VertexColors;
+			//let instancedMaterial = new THREE.MeshPhongMaterial( { map: texture });
+			//instancedGeometry.setAttribute( 'color', new THREE.InstancedBufferAttribute( this.mapMatrix.colourArray, 3 ) );
+			//instancedMaterial.vertexColors = THREE.VertexColors;
 
 			// Set up the final instanced mesh and add to the scene
-			this.mapMesh = new THREE.InstancedMesh( instancedGeometry, instancedMaterial, this.count);
+			this.mapMesh = new THREE.InstancedMesh( instancedGeometry, instancedMaterials, this.count);
 			this.mapMesh.instanceMatrix.setUsage( THREE.DynamicDrawUsage ); // will be updated every frame
 			this.scene.add(this.mapMesh);
 
