@@ -382,7 +382,7 @@ class MapScreen
 		// Set up event handlers if the session is successfully created
 		this.socket.on("session_created_successfully", function()
 		{
-			console.log(this.socket.id);
+			this.alertModal.Show("Players can enter this code to join: " + this.socket.id);
 
 			// If the server requests map data, send
 			this.socket.on("server_request_map", function()
