@@ -156,6 +156,19 @@ app.get("/test", function(request, response)
 /* API Routes */
 /**************/
 
+app.get("/getUser", function(request, response)
+{
+	if (request.session.username)
+	{
+		response.send(request.session.username);
+	}
+	else
+	{
+		response.cookie("Alert", "Session invalid. Please log in.", {maxAge: 30000});
+		response.send(null);
+	}
+});
+
 // Route to authenticate a user record
 app.post("/login", function(request, response)
 {
