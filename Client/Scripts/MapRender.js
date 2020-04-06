@@ -17,6 +17,9 @@ class MapScreen
 {
 	constructor()
 	{
+		// Retrieve the current username
+		this.GetCurrentUser();
+
 		// Map size variables
 		this.xDimension = 125;
 		this.yDimension = 125;
@@ -42,6 +45,14 @@ class MapScreen
     
 		this.rendering = false;
 		this.DetermineSessionType();
+	}
+
+	GetCurrentUser()
+	{
+		$.get("/getUser", function(data, status)
+		{
+			this.currentUser = data;
+		}.bind(this));
 	}
 
 	/*
