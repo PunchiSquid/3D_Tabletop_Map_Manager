@@ -74,9 +74,41 @@ class MapScreen
 		this.camera.position.x = 0;
 		this.camera.position.z = 0;
 
-		// Construct new Scene
+		// Load textures
+		this.topTexture = new THREE.TextureLoader().load("/tex.png");
+		this.topTexture.magFilter = THREE.NearestFilter;
+
+		this.sideTexture = new THREE.TextureLoader().load("/texSide.png");
+		this.sideTexture.magFilter = THREE.NearestFilter;
+		this.sideTexture.wrapS = THREE.RepeatWrapping;
+		this.sideTexture.wrapT = THREE.RepeatWrapping;
+		this.sideTexture.repeat.set(2, 12);
+
+		// Create orbital camera control with the mouse
+		const controls = new THREE.OrbitControls(this.camera, this.canvas);
+		controls.target.set(this.xDimension / 2, 0, this.yDimension / 2);
+		controls.update();
+
+		document.addEventListener("DrawBlock", this.DrawBlock.bind(this));
+		document.addEventListener("SelectBlock", this.SelectBlock.bind(this));
+		document.addEventListener("AddCharacter", this.AddCharacter.bind(this));
+		document.addEventListener("CursorHover", this.PickHoveredObject.bind(this));
+		document.addEventListener("DeleteCharacter", this.DeleteCharacter.bind(this));
+		document.addEventListener("SetBlockHeight", this.SetBlockHeight.bind(this))
+		document.addEventListener("UpdateMap", this.UpdateMap.bind(this));
+		document.addEventListener("MoveCharacter", this.PickUpCharacter.bind(this));
+	}
+
+	RenderScene()
+	{
+		// Initialise a new scene
 		this.scene = new THREE.Scene();
 		this.scene.background = new THREE.Color(0x6bfff8);
+
+		let hoverMaterial = new THREE.MeshPhongMaterial();
+		hoverMaterial.color = new THREE.Color("red");
+		hoverMaterial.opacity = 0.75;
+		hoverMaterial.transparent = true;
 
 		// Create directional light source
 		const color = 0xFFFFFF;
@@ -94,27 +126,82 @@ class MapScreen
 		this.scene.add(light);
 		this.scene.add(light.target);
 
-		// Create orbital camera control with the mouse
-		const controls = new THREE.OrbitControls(this.camera, this.canvas);
-		controls.target.set(this.xDimension / 2, 0, this.yDimension / 2);
-		controls.update();
+		// Set up the instanced box geometry
+		let boxGeometry = new THREE.BoxGeometry(1, 1, 1);
+		let instancedGeometry = new THREE.InstancedBufferGeometry();
+		instancedGeometry.fromGeometry(boxGeometry);
 
-		document.addEventListener("DrawBlock", this.DrawBlock.bind(this));
-		document.addEventListener("SelectBlock", this.SelectBlock.bind(this));
-		document.addEventListener("AddCharacter", this.AddCharacter.bind(this));
-		document.addEventListener("CursorHover", this.PickHoveredObject.bind(this));
-		document.addEventListener("DeleteCharacter", this.DeleteCharacter.bind(this));
-		document.addEventListener("SetBlockHeight", this.SetBlockHeight.bind(this))
-		document.addEventListener("UpdateMap", this.UpdateMap.bind(this));
-		document.addEventListener("MoveCharacter", this.PickUpCharacter.bind(this));
+		var instancedMaterials = 
+		[
+			new THREE.MeshPhongMaterial( { map: this.sideTexture }),
+			new THREE.MeshPhongMaterial( { map: this.sideTexture }),
+			new THREE.MeshPhongMaterial( { map: this.topTexture }),
+			new THREE.MeshPhongMaterial( { map: this.sideTexture }),
+			new THREE.MeshPhongMaterial( { map: this.sideTexture }),
+			new THREE.MeshPhongMaterial( { map: this.sideTexture }),
+		];
+
+		// Set up the final instanced mesh and add to the scene
+		this.mapMesh = new THREE.InstancedMesh( instancedGeometry, instancedMaterials, this.count);
+		this.mapMesh.instanceMatrix.setUsage( THREE.DynamicDrawUsage ); // will be updated every frame
+		this.scene.add(this.mapMesh);
+
+		// Set up the character cylinder geometry and material
+		var characterGeometry = new THREE.CylinderGeometry( 0.75, 0, 2, 8 );
+		let characterMaterial = new THREE.MeshPhongMaterial();
+		characterMaterial.color = new THREE.Color("red");
+		characterMaterial.opacity = 0.75;
+		characterMaterial.transparent = true;
+
+		// Iterate through the height map and move instances to fill the generated map
+		const matrix = new THREE.Matrix4();
+		const dummy = new THREE.Object3D();
+		let offset = 0;
+
+		for (let i = 0; i < this.mapMatrix.heightMap.length; i++)
+		{
+			for (let j = 0; j < this.mapMatrix.heightMap[i].length; j++)
+			{
+				// Retrieve each instance transformation matrix
+				offset++;
+				this.mapMesh.getMatrixAt(offset, matrix);
+				let value = this.mapMatrix.heightMap[i][j];
+
+				// Set a dummy object position to transform the instance being modified
+				dummy.position.set(i, value / 2, j);
+				dummy.updateMatrix();
+				dummy.matrix.elements[5] = value;
+				dummy.matrix.elements[13] = value / 2;
+				this.mapMesh.setMatrixAt( offset, dummy.matrix );
+
+				// If a character is present on a space, add a character token to that space in the render
+				if (this.mapMatrix.GetCharacter(i, j) != null)
+				{
+					let characterMesh = new THREE.Mesh( characterGeometry, characterMaterial);
+					characterMesh.position.set(i, value + 1.25, j);
+					characterMesh.name = "Character";
+					this.scene.add(characterMesh);
+				}
+			}
+		}
+
+		// Flag the matrix for updating
+		this.mapMesh.instanceMatrix.needsUpdate = true;
+
+		// Create a new helper class to assist in raycasting and object picking, then begin the render cycle
+		this.pickHelper = new InstancedObjectPicker(this.scene);
+
+		// If the render loop has not yet been started, begin rendering
+		if (this.rendering == false)
+		{
+			this.rendering = true;
+			this.BeginRendering();
+		}
 	}
 
 	UpdateMap()
 	{
-		if (this.sessionType == SessionTypes.HOST)
-		{
-			this.socket.emit("host_send_map", this.mapMatrix);
-		}
+		this.socket.emit("host_send_map", this.mapMatrix);
 	}
 
 	/*
@@ -134,195 +221,23 @@ class MapScreen
 		this.mapMatrix.LoadMap(id).then(function() 
 		{
 			this.processModal.Hide();
-
-			// Set up the instanced box geometry
-			let boxGeometry = new THREE.BoxGeometry(1, 1, 1);
-			let instancedGeometry = new THREE.InstancedBufferGeometry();
-			instancedGeometry.fromGeometry(boxGeometry);
-
-			var topTexture = new THREE.TextureLoader().load("/tex.png");
-			topTexture.magFilter = THREE.NearestFilter;
-			var sideTexture = new THREE.TextureLoader().load("/texSide.png");
-			sideTexture.magFilter = THREE.NearestFilter;
-			sideTexture.wrapS = THREE.RepeatWrapping;
-			sideTexture.wrapT = THREE.RepeatWrapping;
-			sideTexture.repeat.set(2, 12);
-
-			var instancedMaterials = 
-			[
-				new THREE.MeshPhongMaterial( { map: sideTexture }),
-				new THREE.MeshPhongMaterial( { map: sideTexture }),
-				new THREE.MeshPhongMaterial( { map: topTexture }),
-				new THREE.MeshPhongMaterial( { map: sideTexture }),
-				new THREE.MeshPhongMaterial( { map: sideTexture }),
-				new THREE.MeshPhongMaterial( { map: sideTexture }),
-			];
-
-			var texture = new THREE.TextureLoader().load("/tex.png");
-			var loader = new THREE.TextureLoader();
-			texture.wrapS = THREE.RepeatWrapping;
-			texture.wrapT = THREE.RepeatWrapping;
-			texture.minFilter = THREE.NearestFilter;
-			//texture.repeat.set(4, 4);
-
-			// Set up a colour buffer for the box mesh
-			//let instancedMaterial = new THREE.MeshPhongMaterial( { map: texture });
-			//instancedGeometry.setAttribute( 'color', new THREE.InstancedBufferAttribute( this.mapMatrix.colourArray, 3 ) );
-			//instancedMaterial.vertexColors = THREE.VertexColors;
-
-			// Set up the final instanced mesh and add to the scene
-			this.mapMesh = new THREE.InstancedMesh( instancedGeometry, instancedMaterials, this.count);
-			this.mapMesh.instanceMatrix.setUsage( THREE.DynamicDrawUsage ); // will be updated every frame
-			this.scene.add(this.mapMesh);
-
-			// Set up the character cylinder geometry and material
-			var characterGeometry = new THREE.CylinderGeometry( 0.75, 0, 2, 8 );
-			let characterMaterial = new THREE.MeshPhongMaterial();
-			characterMaterial.color = new THREE.Color("red");
-			characterMaterial.opacity = 0.75;
-			characterMaterial.transparent = true;
-
-			// Iterate through the height map and move instances to fill the generated map
-			const matrix = new THREE.Matrix4();
-			const dummy = new THREE.Object3D();
-			let offset = 0;
-
-			for (let i = 0; i < this.mapMatrix.heightMap.length; i++)
-			{
-				for (let j = 0; j < this.mapMatrix.heightMap[i].length; j++)
-				{
-					// Retrieve each instance transformation matrix
-					offset++;
-					this.mapMesh.getMatrixAt(offset, matrix);
-					let value = this.mapMatrix.heightMap[i][j];
-
-					// Set a dummy object position to transform the instance being modified
-					dummy.position.set(i, value / 2, j);
-					dummy.updateMatrix();
-					dummy.matrix.elements[5] = value;
-					dummy.matrix.elements[13] = value / 2;
-					this.mapMesh.setMatrixAt( offset, dummy.matrix );
-
-					// If a character is present on a space, add a character token to that space in the render
-					if (this.mapMatrix.GetCharacter(i, j) != null)
-					{
-						let characterMesh = new THREE.Mesh( characterGeometry, characterMaterial);
-						characterMesh.position.set(i, value + 1.25, j);
-						characterMesh.name = "Character";
-						this.scene.add(characterMesh);
-					}
-				}
-			}
-
-			// Flag the matrix for updating
-			this.mapMesh.instanceMatrix.needsUpdate = true;
-
-			// Create a new helper class to assist in raycasting and object picking, then begin the render cycle
-			this.pickHelper = new InstancedObjectPicker(this.scene);
-			this.BeginRendering();
-
+			this.RenderScene();
 		}.bind(this));
 	}
 
 	LoadMapFromWebSocket()
 	{
 		this.socket.emit("client_request_map");
+		this.InitialiseRefresh();
+	}
 
+	InitialiseRefresh()
+	{
 		this.socket.on("server_send_map", function(map)
 		{
 			// Load the map and construct a new scene
 			this.mapMatrix.LoadFromRecord(map);
-			this.scene = new THREE.Scene();
-
-			let hoverBoxGeometry = new THREE.CylinderGeometry( 0.5, 0.5, 2, 8 );
-			let hoverMaterial = new THREE.MeshPhongMaterial();
-			hoverMaterial.color = new THREE.Color("red");
-			hoverMaterial.opacity = 0.75;
-			hoverMaterial.transparent = true;
-
-			// Create directional light source
-			const color = 0xFFFFFF;
-			const intensity = 1;
-
-			var light = new THREE.DirectionalLight(color, intensity);
-			light.position.set(3, 2, 2);
-			light.target.position.set(0, 0, 0);
-			this.scene.add(light);
-			this.scene.add(light.target);
-
-			var light = new THREE.DirectionalLight(color, intensity);
-			light.position.set(-3, 2, -2);
-			light.target.position.set(0, 0, 0);
-			this.scene.add(light);
-			this.scene.add(light.target);
-
-			// Set up the instanced box geometry
-			let boxGeometry = new THREE.BoxGeometry(1, 1, 1);
-			let instancedGeometry = new THREE.InstancedBufferGeometry();
-			instancedGeometry.fromGeometry(boxGeometry);
-
-			// Set up a colour buffer for the box mesh
-			let instancedMaterial = new THREE.MeshPhongMaterial();
-			instancedGeometry.setAttribute( 'color', new THREE.InstancedBufferAttribute( this.mapMatrix.colourArray, 3 ) );
-			instancedMaterial.vertexColors = THREE.VertexColors;
-
-			// Set up the final instanced mesh and add to the scene
-			this.mapMesh = new THREE.InstancedMesh( instancedGeometry, instancedMaterial, this.count);
-			this.mapMesh.instanceMatrix.setUsage( THREE.DynamicDrawUsage ); // will be updated every frame
-			this.scene.add(this.mapMesh);
-
-			// Set up the character cylinder geometry and material
-			var characterGeometry = new THREE.CylinderGeometry( 0.75, 0, 2, 8 );
-			let characterMaterial = new THREE.MeshPhongMaterial();
-			characterMaterial.color = new THREE.Color("red");
-			characterMaterial.opacity = 0.75;
-			characterMaterial.transparent = true;
-
-			// Iterate through the height map and move instances to fill the generated map
-			const matrix = new THREE.Matrix4();
-			const dummy = new THREE.Object3D();
-			let offset = 0;
-
-			for (let i = 0; i < this.mapMatrix.heightMap.length; i++)
-			{
-				for (let j = 0; j < this.mapMatrix.heightMap[i].length; j++)
-				{
-					// Retrieve each instance transformation matrix
-					offset++;
-					this.mapMesh.getMatrixAt(offset, matrix);
-					let value = this.mapMatrix.heightMap[i][j];
-
-					// Set a dummy object position to transform the instance being modified
-					dummy.position.set(i, value / 2, j);
-					dummy.updateMatrix();
-					dummy.matrix.elements[5] = value;
-					dummy.matrix.elements[13] = value / 2;
-					this.mapMesh.setMatrixAt( offset, dummy.matrix );
-
-					// If a character is present on a space, add a character token to that space in the render
-					if (this.mapMatrix.GetCharacter(i, j) != null)
-					{
-						let characterMesh = new THREE.Mesh( characterGeometry, characterMaterial);
-						characterMesh.position.set(i, value + 1.25, j);
-						characterMesh.name = "Character";
-						this.scene.add(characterMesh);
-					}
-				}
-			}
-
-			// Flag the matrix for updating
-			this.mapMesh.instanceMatrix.needsUpdate = true;
-
-			// Create a new helper class to assist in raycasting and object picking, then begin the render cycle
-			this.pickHelper = new InstancedObjectPicker(this.scene);
-
-			// If the render loop has not yet been started, begin rendering
-			if (this.rendering == false)
-			{
-				this.rendering = true;
-				this.BeginRendering();
-			}
-
+			this.RenderScene();
 		}.bind(this));
 	}
 
@@ -390,6 +305,8 @@ class MapScreen
 		this.socket = io.connect('http://localhost');
 		this.socket.emit("create_session");
 
+		this.InitialiseRefresh();
+
 		// Set up event handlers if the session is successfully created
 		this.socket.on("session_created_successfully", function()
 		{
@@ -400,12 +317,6 @@ class MapScreen
 			{
 				this.socket.emit("host_send_map", this.mapMatrix);
 			}.bind(this));
-		}.bind(this));
-
-		document.addEventListener("update_map", function()
-		{
-			this.socket.emit("host_send_map", this.mapMatrix);
-
 		}.bind(this));
 	}
 
@@ -433,6 +344,7 @@ class MapScreen
 			this.InitialiseEventListeners();
 
 		}.bind(this));
+
 	}
 
 	/*
@@ -635,6 +547,12 @@ class MapScreen
 			let matrix = new THREE.Matrix4();
 			matrix = object.position;
 
+			// Get the owner of the selected character
+			let owner = this.mapMatrix.GetCharacter(matrix.x, matrix.z).owner;
+
+			// Check if the player is the one that originally placed the character
+			let isOwner = (owner == this.currentUser || this.sessionType == SessionTypes.HOST);
+
 			// Retrieve the world position projected from the camera
 			let dummy = new THREE.Object3D();
 			let tempVector = new THREE.Vector3();
@@ -648,7 +566,7 @@ class MapScreen
 			let y = (tempVector.y * -.5 + .5) * this.canvas.clientHeight;
 
 			// Add a label
-			this.html.AddCharacterLabel(x, y, object);
+			this.html.AddCharacterLabel(x, y, object, isOwner);
 
 			document.dispatchEvent(new Event("UpdateMap"));
 		}
@@ -682,7 +600,7 @@ class MapScreen
 				else
 				{
 					// Set new character in the map
-					this.mapMatrix.AddCharacter(locationMatrix.x, locationMatrix.z);
+					this.mapMatrix.AddCharacter(locationMatrix.x, locationMatrix.z, this.currentUser);
 				}
 
 				// Set a material for the hovering box
@@ -718,8 +636,14 @@ class MapScreen
 			let x = (tempVector.x *  .5 + .5) * this.canvas.clientWidth;
 			let y = (tempVector.y * -.5 + .5) * this.canvas.clientHeight;
 
+			// Get the owner of the selected character
+			let owner = this.mapMatrix.GetCharacter(locationMatrix.x, locationMatrix.z).owner;
+
+			// Check if the player is the one that originally placed the character
+			let isOwner = (owner == this.currentUser || this.sessionType == SessionTypes.HOST);
+
 			// Add a label
-			this.html.AddCharacterLabel(x, y, characterMesh);
+			this.html.AddCharacterLabel(x, y, characterMesh, isOwner);
 
 			document.dispatchEvent(new Event("UpdateMap"));
 		}
