@@ -66,6 +66,7 @@ io.on("connection", function (socket)
 	{
 		// Set the host ID of the room as the socket ID of the creating user
 		io.sockets.adapter.rooms[socket.id].hostID = socket.id;
+		socket.currentSession = socket.id;
 		socket.emit("session_created_successfully");
 	});
 
@@ -86,7 +87,7 @@ io.on("connection", function (socket)
 	socket.on("host_send_map", function(map)
 	{
 		// Direct a host map file to all clients
-		socket.to(socket.id).emit("server_send_map", map);
+		socket.to(socket.currentSession).emit("server_send_map", map);
 	});
 });
 
