@@ -32,7 +32,7 @@ class HTMLGenerator
 		this.label = null;
 	}
 
-	AddCharacterLabel(x, y, object)
+	AddCharacterLabel(x, y, object, active)
 	{
 		// Clear the existing labels
 		this.RemoveLabels();
@@ -41,6 +41,7 @@ class HTMLGenerator
 		this.object = object;
 
 		// Retrieve details for display
+		let ownerValue = this.mapScreen.mapMatrix.characterMatrix[this.object.position.x][this.object.position.z].owner;
 		let nameValue = this.mapScreen.mapMatrix.characterMatrix[this.object.position.x][this.object.position.z].name;
 		let notesValue = this.mapScreen.mapMatrix.characterMatrix[this.object.position.x][this.object.position.z].notes;
 
@@ -49,6 +50,10 @@ class HTMLGenerator
 		this.label.className = "active_label";
 
 		// Create a new header and set the inner text
+		let ownerTitle = document.createElement("p");
+		ownerTitle.textContent = "Owner";
+		ownerTitle.style = "display: inline-block; padding-right: 10px;";
+
 		let nameTitle = document.createElement("p");
 		nameTitle.textContent = "Name";
 		nameTitle.style = "display: inline-block; padding-right: 10px;";
@@ -62,6 +67,13 @@ class HTMLGenerator
 		nameForm.setAttribute("min", "1");
 		nameForm.setAttribute("value", nameValue);
 		nameForm.style = "display: inline-block";
+
+		let ownerForm = document.createElement("input");
+		ownerForm.setAttribute("type", "text");
+		ownerForm.setAttribute("value", ownerValue);
+		ownerForm.style = "display: inline-block";
+		ownerForm.disabled = true;
+		
 
 		let notesForm = document.createElement("textarea");
 		notesForm.value = notesValue;
@@ -81,13 +93,24 @@ class HTMLGenerator
 
 		// Append the new label to the label container and label elements to the label
 		this.labelContainer.appendChild(this.label);
+		this.label.appendChild(ownerTitle);
+		this.label.appendChild(ownerForm);
 		this.label.appendChild(nameTitle);
 		this.label.appendChild(nameForm);
 		this.label.appendChild(notesTitle);
 		this.label.appendChild(notesForm);
 		this.label.appendChild(closeButton);
-		this.label.appendChild(moveButton);
-		this.label.appendChild(deleteButton);
+
+		if (!active)
+		{
+			nameForm.disabled = true;
+			notesForm.disabled = true;
+		}
+		else
+		{
+			this.label.appendChild(moveButton);
+			this.label.appendChild(deleteButton);
+		}
 
 		// Transform the new element with CSS
 		this.label.style.transform = `translate(-50%, -50%) translate(${x + this.horizontalOffset}px,${y}px)`;

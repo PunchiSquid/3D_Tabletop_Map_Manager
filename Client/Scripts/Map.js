@@ -268,11 +268,11 @@ class Map
 	* @Param x The X index on the matrix.
 	* @Param y The Y index on the matrix.
 	*/
-	AddCharacter(x, y)
+	AddCharacter(x, y, owner)
 	{
 		if (this.characterMatrix[x][y] == null)
 		{
-			let character = new Character();
+			let character = new Character(owner);
 			this.characterMatrix[x][y] = character;
 			document.dispatchEvent(new Event("UpdateMap"));
 		}
@@ -298,7 +298,7 @@ class Map
 	SetCharacter(x, y, value)
 	{
 		// Only allow valid characters with properties or empty records for deletion
-		if (value == null || (value.name && value.notes))
+		if (value == null || (value.name))
 		{
 			this.characterMatrix[x][y] = value;	
 			document.dispatchEvent(new Event("UpdateMap"));
