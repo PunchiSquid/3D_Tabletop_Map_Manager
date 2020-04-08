@@ -201,7 +201,12 @@ class MapScreen
 
 	UpdateMap()
 	{
-		this.socket.emit("host_send_map", this.mapMatrix);
+		if (this.sessionType == SessionTypes.HOST || this.sessionType == SessionTypes.CLIENT)
+		{
+			this.socket.emit("host_send_map", this.mapMatrix);
+		}
+
+		this.RenderScene();
 	}
 
 	/*
