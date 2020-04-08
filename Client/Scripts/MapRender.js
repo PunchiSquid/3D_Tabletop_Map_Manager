@@ -97,6 +97,10 @@ class MapScreen
 		document.addEventListener("SetBlockHeight", this.SetBlockHeight.bind(this))
 		document.addEventListener("UpdateMap", this.UpdateMap.bind(this));
 		document.addEventListener("MoveCharacter", this.PickUpCharacter.bind(this));
+		document.addEventListener("AddBlockToHiddenRegion", this.AddBlockToHiddenRegion.bind(this));
+		document.addEventListener("RemoveBlockFromHiddenRegion", this.RemoveBlockFromHiddenRegion.bind(this));
+		document.addEventListener("ToggleHiddenRegionVisibility", this.ToggleRegionVisibility.bind(this));
+		document.addEventListener("AddNewHiddenRegion", this.AddNewRegion.bind(this));
 	}
 
 	RenderScene()
@@ -499,6 +503,50 @@ class MapScreen
 			// Add a label
 			this.html.AddLabel(x, y, object, instance);
 		}
+	}
+
+	ToggleRegionVisibility(e)
+	{
+		// Store event variables for shortened code
+		let region = e.detail.region;
+		let isHidden = e.detail.isHidden;
+
+		this.mapMatrix.RevealRegion(region, isHidden);
+
+		document.dispatchEvent(new Event("UpdateMap"));
+	}
+
+	AddNewRegion(e)
+	{
+		// Store event variables for shortened code
+		let region = e.detail.region;
+		this.mapMatrix.AddNewRegion(region);
+
+		document.dispatchEvent(new Event("UpdateMap"));
+	}
+
+	AddBlockToHiddenRegion(e)
+	{
+		// Store event variables for shortened code
+		let region = e.detail.region;
+		let x = e.detail.x;
+		let y = e.detail.y;
+
+		this.mapMatrix.AddBlockToHiddenRegion(x, y, region);
+
+		document.dispatchEvent(new Event("UpdateMap"));
+	}
+
+	RemoveBlockFromHiddenRegion(e)
+	{
+		// Store event variables for shortened code
+		let region = e.detail.region;
+		let x = e.detail.x;
+		let y = e.detail.y;
+		
+		this.mapMatrix.RemoveBlockFromHiddenRegion(x, y, region);
+
+		document.dispatchEvent(new Event("UpdateMap"));
 	}
 
 	/*
