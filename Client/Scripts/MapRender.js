@@ -172,6 +172,16 @@ class MapScreen
 				dummy.updateMatrix();
 				dummy.matrix.elements[5] = value;
 				dummy.matrix.elements[13] = value / 2;
+
+				if (this.mapMatrix.hiddenBlockMatrix[i][j] == true)
+				{
+					dummy.scale.set(0, 0, 0);
+				}
+				else
+				{
+					dummy.scale.set(1, 1, 1);
+				}
+
 				this.mapMesh.setMatrixAt( offset, dummy.matrix );
 
 				// If a character is present on a space, add a character token to that space in the render
@@ -349,7 +359,6 @@ class MapScreen
 			this.InitialiseEventListeners();
 
 		}.bind(this));
-
 	}
 
 	/*
