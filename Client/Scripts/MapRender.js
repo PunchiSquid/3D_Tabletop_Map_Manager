@@ -3,7 +3,8 @@ SelectTypes =
 	SELECT: "select",
 	ADD: "add",
 	REMOVE: "remove",
-	CHARACTER: "character"
+	CHARACTER: "character",
+	HIDDEN_REGION: "hidden_region"
 };
 
 SessionTypes = 
@@ -179,11 +180,13 @@ class MapScreen
 
 				if (this.mapMatrix.hiddenBlockMatrix[i][j] == true)
 				{
-					dummy.scale.set(0, 0, 0);
+					dummy.matrix.elements[5] = 1;
+					dummy.matrix.elements[13] = 1 / 2;
 				}
 				else
 				{
-					dummy.scale.set(1, 1, 1);
+					dummy.matrix.elements[5] = value;
+					dummy.matrix.elements[13] = value / 2;
 				}
 
 				this.mapMesh.setMatrixAt( offset, dummy.matrix );
@@ -511,7 +514,7 @@ class MapScreen
 		let region = e.detail.region;
 		let isHidden = e.detail.isHidden;
 
-		this.mapMatrix.RevealRegion(region, isHidden);
+		this.mapMatrix.RevealHiddenRegion(region, isHidden);
 
 		document.dispatchEvent(new Event("UpdateMap"));
 	}
@@ -867,6 +870,13 @@ class MapScreen
 
 		}.bind(this));
 
+		document.getElementById("button_hiddenblocks").addEventListener("click", function()
+		{
+			this.activeSelectType = SelectTypes.HIDDEN_REGION;
+			SetButtonBorder();
+
+		}.bind(this));
+
 		document.getElementById("button_save").addEventListener("click", function()
 		{
 			this.SaveMap();
@@ -924,11 +934,14 @@ function SetButtonBorder()
 	let addButton = document.getElementById("button_add");
 	let deleteButton = document.getElementById("button_delete");
 	let characterButton = document.getElementById("button_character");
+	let hiddenButton = document.getElementById("button_hiddenblocks");
 
 	selectButton.classList.toggle('active_button', false);
 	addButton.classList.toggle('active_button', false);
 	deleteButton.classList.toggle('active_button', false);
 	characterButton.classList.toggle('active_button', false);
+	selectButton.classList.toggle('active_button', false);
+	hiddenButton.classList.toggle('active_button', false);
 
 	switch(screen.activeSelectType)
 	{
@@ -944,6 +957,8 @@ function SetButtonBorder()
 		case SelectTypes.CHARACTER:
 			characterButton.classList.toggle('active_button', true);
 			break;
+		case SelectTypes.HIDDEN_REGION:
+			hiddenButton.classList.toggle('active_button', true);
 		default:
 			console.log("None");
 			break;
