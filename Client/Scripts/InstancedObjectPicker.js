@@ -41,9 +41,19 @@ class InstancedObjectPicker
 	{
 		// cast a ray through the frustum
 		this.raycaster.setFromCamera(mousePosition, camera);
+		let selectArray = this.scene.children.slice();
+
+		for (let i = 0; i < this.scene.children.length; i++)
+		{
+			if (this.scene.children[i].name == "Hidden Blocks")
+			{
+				selectArray.splice(i);
+				break;
+			}
+		}
 
 		// get the list of objects the ray intersected
-		const intersectedObjects = this.raycaster.intersectObjects(this.scene.children);
+		const intersectedObjects = this.raycaster.intersectObjects(selectArray);
 
 		if (intersectedObjects.length) 
 		{
@@ -83,8 +93,10 @@ class InstancedObjectPicker
 		// cast a ray through the frustum
 		this.raycaster.setFromCamera(mousePosition, camera);
 
+		let selectArray = this.scene.children.slice();
+
 		// get the list of objects the ray intersected
-		const intersectedObjects = this.raycaster.intersectObjects(this.scene.children);
+		const intersectedObjects = this.raycaster.intersectObjects(selectArray);
 
 		// If objects have been intersected
 		if (intersectedObjects.length) 
