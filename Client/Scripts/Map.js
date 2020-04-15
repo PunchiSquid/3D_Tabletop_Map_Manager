@@ -220,28 +220,29 @@ class Map
 	}
 
 	AddBlockToHiddenRegion(x, y, regionName)
-	{
-		this.hiddenBlockMatrix[x][y] = true;
-		
+	{		
 		for (let i = 0; i < this.hiddenRegions.length; i++)
 		{
 			if (this.hiddenRegions[i].name == regionName)
 			{
 				this.hiddenRegions[i].AddHiddenBlock(x, y);
+				this.hiddenBlockMatrix[x][y] = true;
 				break;
 			}
 		}
 	}
 
 	RemoveBlockFromHiddenRegion(x, y, regionName)
-	{
-		this.hiddenBlockMatrix[x][y] = false;
-		
+	{		
 		for (let i = 0; i < this.hiddenRegions.length; i++)
 		{
 			if (this.hiddenRegions[i].name == regionName)
 			{
-				this.hiddenRegions[i].RemoveHiddenBlock(x, y);
+				if (this.hiddenRegions[i].RemoveHiddenBlock(x, y))
+				{
+					this.hiddenBlockMatrix[x][y] = false;
+				}
+
 				break;
 			}
 		}
@@ -256,6 +257,7 @@ class Map
 			if (this.hiddenRegions[i].name == regionName)
 			{
 				blocksToReveal = this.hiddenRegions[i].GetHiddenBlocks();
+				this.hiddenRegions[i].SetIsHidden(isHidden);
 				break;
 			}
 		}
