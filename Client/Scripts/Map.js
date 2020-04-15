@@ -269,6 +269,38 @@ class Map
 		}
 	}
 
+	AddNewRegion(regionName)
+	{
+		if (regionName != null)
+		{
+			this.hiddenRegions.push(new HiddenRegion(regionName));
+		}
+	}
+
+	RemoveHiddenRegion(regionName)
+	{
+		let blocksToReveal;
+
+		for (let i = 0; i < this.hiddenRegions.length; i++)
+		{
+			if (this.hiddenRegions[i].name == regionName)
+			{
+				console.log(this.hiddenRegions[i].name);
+				blocksToReveal = this.hiddenRegions[i].GetHiddenBlocks().slice();
+				this.hiddenRegions.splice(i, 1);
+				break;
+			}
+		}
+
+		for (let j = 0; j < blocksToReveal.length; j++)
+		{
+			const x = blocksToReveal[j].x;
+			const y = blocksToReveal[j].y;
+
+			this.hiddenBlockMatrix[x][y] = false;
+		}
+	}
+
 	/*
 	* Adds to the height map value at the specified location on the heightmap, 
 	* then returns the resultant value.
