@@ -302,7 +302,7 @@ class MapScreen
 		this.InitialiseEventListeners();
 
 		// Connect and create a session
-		this.socket = io.connect('http://localhost');
+		this.socket = io();
 		this.socket.emit("create_session");
 
 		this.InitialiseRefresh();
@@ -331,7 +331,7 @@ class MapScreen
 		let sessionID = $.cookie("SessionID");
 
 		// Connect and create a session
-		this.socket = io.connect('http://localhost');
+		this.socket = io();
 		this.socket.emit("join_session", sessionID);
 
 		// Set up event handlers if the session is successfully joined

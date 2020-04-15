@@ -4,9 +4,21 @@ const cookieParser = require('cookie-parser');
 const http = require("http");
 const fs = require('fs');
 const app = express();
-const server = http.createServer(app);
-const io = require('socket.io')(server);
 const MongoClient = require('mongodb').MongoClient;
+
+// Require statements for server hosting and websockets
+const server = require("http").Server(app);
+const io = require('socket.io')(server, {
+    handlePreflightRequest: (req, res) => {
+        const headers = {
+            "Access-Control-Allow-Headers": "Content-Type, Authorization",
+            "Access-Control-Allow-Origin": req.headers.origin, //or the specific origin you want to give access to,
+            "Access-Control-Allow-Credentials": true
+        };
+        res.writeHead(200, headers);
+        res.end();
+    }
+});
 
 // Require custom node modules
 const MongoConnection = require('./databaseFunctions');
@@ -20,7 +32,6 @@ let connection = JSON.parse(rawdata);
 // If hosted on Heroku, the port is defined by the service
 // If hosted locally the port is 9000
 const serverPort = process.env.PORT || 9000;
-const websocketPort = process.env.PORT || 80;
 
 // MongoDB URI
 const uri = connection.uri;
@@ -370,12 +381,7 @@ app.put("/map", function(request, response)
 });
 
 // Listen for connections
-app.listen(serverPort, function()
+server.listen(serverPort, function()
 {
 	console.log("Listening for HTTP requests on " + serverPort);
-});
-
-server.listen(websocketPort, function()
-{
-	console.log("Listening for Websocket requests on port " + websocketPort + " ...");
 });
