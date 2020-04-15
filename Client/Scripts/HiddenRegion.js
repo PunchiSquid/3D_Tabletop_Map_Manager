@@ -43,4 +43,14 @@ class HiddenRegion
     {
         return this.hiddenBlocks;
     }
+
+    SetIsHidden(value)
+    {
+        this.isHidden = value;
+    }
+
+    GetIsHidden()
+    {
+        return this.isHidden;
+    }
 }
