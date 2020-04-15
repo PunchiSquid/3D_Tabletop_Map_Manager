@@ -79,6 +79,14 @@ class InstancedObjectPicker
 				{
 					this.AddCharacter();
 				}
+				else if (activeSelectType == SelectTypes.ADD_BLOCK_TO_REGION)
+				{
+					this.AddBlockToRegion();
+				}
+				else if (activeSelectType == SelectTypes.REMOVE_BLOCK_FROM_REGION)
+				{
+					this.RemoveBlockFromRegion();
+				}
 			}
 		}
 	}
@@ -139,6 +147,32 @@ class InstancedObjectPicker
 	{
 		let detail = { instance: this.pickedClickInstance };
 		let event = new CustomEvent("SelectBlock", { detail: detail });
+		document.dispatchEvent(event);
+	}
+
+	AddBlockToRegion()
+	{
+		let detail = 
+		{ 
+			instance: this.pickedClickInstance,
+			object: this.pickedClickObject
+		};
+
+		let event = new CustomEvent("AddBlockToHiddenRegion", { detail: detail });
+		document.dispatchEvent(event);
+	}
+
+	RemoveBlockFromRegion()
+	{
+		console.log("Woo");
+
+		let detail = 
+		{ 
+			instance: this.pickedClickInstance,
+			object: this.pickedClickObject
+		};
+
+		let event = new CustomEvent("RemoveBlockFromHiddenRegion", { detail: detail });
 		document.dispatchEvent(event);
 	}
 }
