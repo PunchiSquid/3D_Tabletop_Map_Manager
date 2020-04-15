@@ -4,6 +4,7 @@ class HiddenRegion
     {
         this.name = name;
         this.hiddenBlocks = new Array();
+        this.isHidden = true;
     }
 
     /*
@@ -31,9 +32,11 @@ class HiddenRegion
             if (this.hiddenBlocks[i].x == x && this.hiddenBlocks[i].y == y)
             {
                 this.hiddenBlocks.splice(i, 1);
-                break;
+                return true;
             }
         }
+        
+        return false;
     }
 
     /*
