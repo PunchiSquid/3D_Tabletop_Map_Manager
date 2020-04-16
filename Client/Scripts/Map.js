@@ -72,6 +72,7 @@ class Map
 			// Upon success load the data from the map record into the current map object and resolve
 			request.done(function(data, status)
 			{
+				console.log(data);
 				this.LoadFromRecord(data);
 				resolve(status);
 
@@ -102,9 +103,17 @@ class Map
 		this.heightMap = mapRecord.heightMap;
 		this.detailMatrix = mapRecord.detailMatrix;
 		this.characterMatrix = mapRecord.characterMatrix;
-		this.hiddenBlockMatrix = mapRecord.hiddenBlockMatrix;
 
-		this.CopyHiddenRegions(mapRecord.hiddenRegions);
+		if (mapRecord.hiddenBlockMatrix && mapRecord.hiddenRegions)
+		{
+			this.hiddenBlockMatrix = mapRecord.hiddenBlockMatrix;	
+			this.CopyHiddenRegions(mapRecord.hiddenRegions);
+		}
+		else
+		{
+			this.GenerateHiddenBlocKMatrix();
+		}
+
 		this.CopyColourArray(mapRecord.colourArray);
 	}
 
@@ -211,7 +220,7 @@ class Map
 		this.hiddenBlockMatrix = new Array(this.mapXDimension);
 		this.hiddenRegions = new Array();
 
-		for (let i = 0; i < this.characterMatrix.length; i++)
+		for (let i = 0; i < this.hiddenBlockMatrix.length; i++)
 		{
 			let column = new Array(this.mapYDimension);
 			column.fill(false);
