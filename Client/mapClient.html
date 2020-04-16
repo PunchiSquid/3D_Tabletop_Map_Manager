@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<title>Secure Page</title>
+		
+		<!-- External CDNs -->
+		<script src="https://code.jquery.com/jquery-3.4.1.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.min.js"></script>
+		<link href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+		<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+
+		<!-- Internal stylesheets -->
+		<link rel="stylesheet" type="text/css" href="/style.css">
+	
+		<!-- Internal scripts -->
+		<script src="/OrbitControls.js"></script>
+		<script src="/three.js"></script>
+		<script src="/GLTFLoader.js"></script>
+		<script src="/OrbitControls.js"></script>
+		<script src="/ModalManager.js"></script>
+		<script src="/socket.io.js"></script>
+	</head>
+
+	<body>
+		<div id="container">
+
+			<canvas id="c"></canvas>
+
+			<!-- Right-hand buttons -->
+			<div id="right_buttons">
+				<button id="button_select"><img title="Select Block" src="/Icons/Select.png"></button>
+				<button id="button_character"><img title="Add/Select Character" src="/Icons/Character.png"></button>
+			</div>
+
+			<!-- Inner container for labels to be generated in javascript -->
+			<div id="labels"></div>
+
+			<!-- Inner container for menu elements to be generated in javascript -->
+			<div id="menus"></div>
+
+		</div>
+	</body>
+
+
+	<!-- Internal scripts that require the DOM to be loaded first -->
+	<script src="/HTMLManager.js"></script>
+	<script src="/InstancedObjectPicker.js"></script>
+	<script src="/Map.js"></script>
+	<script src="/MapRender.js"></script>
+	<script src="/Character.js"></script>
+
+</html> 
