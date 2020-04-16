@@ -914,7 +914,7 @@ class MapScreen
 		let deleteButton = document.getElementById("button_delete");
 		let characterButton = document.getElementById("button_character");
 		let saveButton = document.getElementById("button_save");
-    let hiddenButton = document.getElementById("button_hiddenblocks");
+		let hiddenButton = document.getElementById("button_hiddenblocks");
 
 		if (selectButton) selectButton.addEventListener("click", function()
 		{
@@ -949,7 +949,7 @@ class MapScreen
 
 		}.bind(this));
     
-    if (hiddenButton).addEventListener("click", function()
+    	if (hiddenButton) hiddenButton.addEventListener("click", function()
 		{
 			this.activeSelectType = SelectTypes.HIDDEN_REGION;
 			this.html.RemoveLabels();
@@ -1021,7 +1021,7 @@ function SetButtonBorder()
 	if (addButton) addButton.classList.toggle('active_button', false);
 	if (deleteButton) deleteButton.classList.toggle('active_button', false);
 	if (characterButton) characterButton.classList.toggle('active_button', false);
-  if (hiddenButton) hiddenButton.classList.toggle('active_button', false);
+ 	if (hiddenButton) hiddenButton.classList.toggle('active_button', false);
 
 	switch(screen.activeSelectType)
 	{
