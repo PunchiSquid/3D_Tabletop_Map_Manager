@@ -772,7 +772,13 @@ class MapScreen
 		this.canvas.addEventListener('mousemove', SetPickPosition);
 		this.canvas.addEventListener( 'mousedown', SetClick, false );
 
-		document.getElementById("button_select").addEventListener("click", function()
+		let selectButton = document.getElementById("button_select");
+		let addButton = document.getElementById("button_add");
+		let deleteButton = document.getElementById("button_delete");
+		let characterButton = document.getElementById("button_character");
+		let saveButton = document.getElementById("button_save");
+
+		if (selectButton) selectButton.addEventListener("click", function()
 		{
 			this.activeSelectType = SelectTypes.SELECT;
 			this.html.RemoveLabels();
@@ -780,7 +786,7 @@ class MapScreen
 
 		}.bind(this));
 
-		document.getElementById("button_add").addEventListener("click", function()
+		if (addButton) addButton.addEventListener("click", function()
 		{
 			this.activeSelectType = SelectTypes.ADD;
 			this.html.RemoveLabels();
@@ -789,7 +795,7 @@ class MapScreen
 
 		}.bind(this));
 
-		document.getElementById("button_delete").addEventListener("click", function()
+		if (deleteButton) deleteButton.addEventListener("click", function()
 		{
 			this.activeSelectType = SelectTypes.REMOVE;
 			this.html.RemoveLabels();
@@ -797,7 +803,7 @@ class MapScreen
 
 		}.bind(this));
 
-		document.getElementById("button_character").addEventListener("click", function()
+		if (characterButton) characterButton.addEventListener("click", function()
 		{
 			this.activeSelectType = SelectTypes.CHARACTER;
 			this.html.RemoveLabels();
@@ -805,7 +811,7 @@ class MapScreen
 
 		}.bind(this));
 
-		document.getElementById("button_save").addEventListener("click", function()
+		if (saveButton) saveButton.addEventListener("click", function()
 		{
 			this.SaveMap();
 			SetButtonBorder();
@@ -863,24 +869,24 @@ function SetButtonBorder()
 	let deleteButton = document.getElementById("button_delete");
 	let characterButton = document.getElementById("button_character");
 
-	selectButton.classList.toggle('active_button', false);
-	addButton.classList.toggle('active_button', false);
-	deleteButton.classList.toggle('active_button', false);
-	characterButton.classList.toggle('active_button', false);
+	if (selectButton) selectButton.classList.toggle('active_button', false);
+	if (addButton) addButton.classList.toggle('active_button', false);
+	if (deleteButton) deleteButton.classList.toggle('active_button', false);
+	if (characterButton) characterButton.classList.toggle('active_button', false);
 
 	switch(screen.activeSelectType)
 	{
 		case SelectTypes.SELECT:
-			selectButton.classList.toggle('active_button', true);
+			if (selectButton) selectButton.classList.toggle('active_button', true);
 			break;
 		case SelectTypes.ADD:
-			addButton.classList.toggle('active_button', true);
+			if (addButton) addButton.classList.toggle('active_button', true);
 			break;
 		case SelectTypes.REMOVE:
-			deleteButton.classList.toggle('active_button', true);
+			if (deleteButton) deleteButton.classList.toggle('active_button', true);
 			break;
 		case SelectTypes.CHARACTER:
-			characterButton.classList.toggle('active_button', true);
+			if (characterButton) characterButton.classList.toggle('active_button', true);
 			break;
 		default:
 			console.log("None");
