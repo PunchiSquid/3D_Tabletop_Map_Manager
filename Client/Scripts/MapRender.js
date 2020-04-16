@@ -543,8 +543,11 @@ class MapScreen
 			let x = (tempVector.x *  .5 + .5) * this.canvas.clientWidth;
 			let y = (tempVector.y * -.5 + .5) * this.canvas.clientHeight;
 
+			// Only allow editing if the map is currently hosted or being edited
+			let active = (this.sessionType == SessionTypes.HOST || this.sessionType == SessionTypes.EDIT);
+
 			// Add a label
-			this.html.AddLabel(x, y, object, instance);
+			this.html.AddLabel(x, y, object, instance, active);
 		}
 	}
 
@@ -906,7 +909,14 @@ class MapScreen
 		this.canvas.addEventListener('mousemove', SetPickPosition);
 		this.canvas.addEventListener( 'mousedown', SetClick, false );
 
-		document.getElementById("button_select").addEventListener("click", function()
+		let selectButton = document.getElementById("button_select");
+		let addButton = document.getElementById("button_add");
+		let deleteButton = document.getElementById("button_delete");
+		let characterButton = document.getElementById("button_character");
+		let saveButton = document.getElementById("button_save");
+    let hiddenButton = document.getElementById("button_hiddenblocks");
+
+		if (selectButton) selectButton.addEventListener("click", function()
 		{
 			this.activeSelectType = SelectTypes.SELECT;
 			this.html.RemoveLabels();
@@ -914,7 +924,7 @@ class MapScreen
 
 		}.bind(this));
 
-		document.getElementById("button_add").addEventListener("click", function()
+		if (addButton) addButton.addEventListener("click", function()
 		{
 			this.activeSelectType = SelectTypes.ADD;
 			this.html.RemoveLabels();
@@ -923,7 +933,7 @@ class MapScreen
 
 		}.bind(this));
 
-		document.getElementById("button_delete").addEventListener("click", function()
+		if (deleteButton) deleteButton.addEventListener("click", function()
 		{
 			this.activeSelectType = SelectTypes.REMOVE;
 			this.html.RemoveLabels();
@@ -931,15 +941,15 @@ class MapScreen
 
 		}.bind(this));
 
-		document.getElementById("button_character").addEventListener("click", function()
+		if (characterButton) characterButton.addEventListener("click", function()
 		{
 			this.activeSelectType = SelectTypes.CHARACTER;
 			this.html.RemoveLabels();
 			SetButtonBorder();
 
 		}.bind(this));
-
-		document.getElementById("button_hiddenblocks").addEventListener("click", function()
+    
+    if (hiddenButton).addEventListener("click", function()
 		{
 			this.activeSelectType = SelectTypes.HIDDEN_REGION;
 			this.html.RemoveLabels();
@@ -948,7 +958,7 @@ class MapScreen
 
 		}.bind(this));
 
-		document.getElementById("button_save").addEventListener("click", function()
+		if (saveButton) saveButton.addEventListener("click", function()
 		{
 			this.SaveMap();
 			SetButtonBorder();
@@ -1007,26 +1017,25 @@ function SetButtonBorder()
 	let characterButton = document.getElementById("button_character");
 	let hiddenButton = document.getElementById("button_hiddenblocks");
 
-	selectButton.classList.toggle('active_button', false);
-	addButton.classList.toggle('active_button', false);
-	deleteButton.classList.toggle('active_button', false);
-	characterButton.classList.toggle('active_button', false);
-	selectButton.classList.toggle('active_button', false);
-	hiddenButton.classList.toggle('active_button', false);
+	if (selectButton) selectButton.classList.toggle('active_button', false);
+	if (addButton) addButton.classList.toggle('active_button', false);
+	if (deleteButton) deleteButton.classList.toggle('active_button', false);
+	if (characterButton) characterButton.classList.toggle('active_button', false);
+  if (hiddenButton) hiddenButton.classList.toggle('active_button', false);
 
 	switch(screen.activeSelectType)
 	{
 		case SelectTypes.SELECT:
-			selectButton.classList.toggle('active_button', true);
+			if (selectButton) selectButton.classList.toggle('active_button', true);
 			break;
 		case SelectTypes.ADD:
-			addButton.classList.toggle('active_button', true);
+			if (addButton) addButton.classList.toggle('active_button', true);
 			break;
 		case SelectTypes.REMOVE:
-			deleteButton.classList.toggle('active_button', true);
+			if (deleteButton) deleteButton.classList.toggle('active_button', true);
 			break;
 		case SelectTypes.CHARACTER:
-			characterButton.classList.toggle('active_button', true);
+			if (characterButton) characterButton.classList.toggle('active_button', true);
 			break;
 		case SelectTypes.HIDDEN_REGION:
 			hiddenButton.classList.toggle('active_button', true);

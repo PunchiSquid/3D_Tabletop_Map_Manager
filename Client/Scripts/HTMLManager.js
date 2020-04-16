@@ -178,10 +178,11 @@ class HTMLGenerator
 	* then returns the resultant value.
 	* @Param x The X index on the matrix.
 	* @Param y The Y index on the matrix.
-	* @Param currentLabelobject The instanced object to retrieve the transformation matrix from.
-	* @Param currentLabelLocation The specific instance of the object to access.
+	* @Param object The object to track the instance of.
+	* @Param instance The instance ID for matrix retrieval.
+	* @Param active Boolean to determine if the user can edit the map.
 	*/
-	AddLabel(x, y, object, instance)
+	AddLabel(x, y, object, instance, active)
 	{
 		// Clear the existing labels
 		this.RemoveLabels();
@@ -240,6 +241,12 @@ class HTMLGenerator
 		this.label.appendChild(descriptionTitle);
 		this.label.appendChild(descriptionForm);
 		this.label.appendChild(closeButton);
+
+		if (!active)
+		{
+			heightForm.disabled = true;
+			descriptionForm.disabled = true;
+		}
 
 		// Transform the new element with CSS
 		this.label.style.transform = `translate(-50%, -50%) translate(${x + this.horizontalOffset}px,${y}px)`;
