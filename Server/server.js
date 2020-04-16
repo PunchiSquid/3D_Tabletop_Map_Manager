@@ -124,7 +124,7 @@ app.get("/list", function(request, response)
 	response.sendFile("/Client/list.html", {"root": __dirname + "/../"});
 });
 
-// Placeholder secure route
+// Host and editor route
 app.get("/editor/:mapID", function(request, response)
 {
 	if (request.session.userID)
@@ -135,7 +135,14 @@ app.get("/editor/:mapID", function(request, response)
 		{
 			if (res)
 			{
-				response.sendFile("/Client/map.html", {"root": __dirname + "/../"});
+				if (request.cookies.SessionType == "client")
+				{
+					response.sendFile("/Client/mapClient.html", {"root": __dirname + "/../"});
+				}
+				else
+				{
+					response.sendFile("/Client/map.html", {"root": __dirname + "/../"});
+				}
 			}
 			else
 			{
