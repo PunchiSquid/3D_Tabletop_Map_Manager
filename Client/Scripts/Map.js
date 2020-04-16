@@ -13,7 +13,7 @@ class Map
 		this.GenerateHeightMap();
 		this.GenerateColourBufferArray();
 		this.GenerateDetailMatrix();
-
+		this.GenerateHiddenBlocKMatrix();
 		this.GenerateCharacterMatrix();
 	}
 
@@ -102,7 +102,9 @@ class Map
 		this.heightMap = mapRecord.heightMap;
 		this.detailMatrix = mapRecord.detailMatrix;
 		this.characterMatrix = mapRecord.characterMatrix;
+		this.hiddenBlockMatrix = mapRecord.hiddenBlockMatrix;
 
+		this.CopyHiddenRegions(mapRecord.hiddenRegions);
 		this.CopyColourArray(mapRecord.colourArray);
 	}
 
@@ -122,6 +124,18 @@ class Map
 		for (let i = 0; i < valueArray.length; i++)
 		{
 			this.colourArray[i] = valueArray[i];
+		}
+	}
+
+	CopyHiddenRegions(retrievedHiddenRegions)
+	{
+		this.hiddenRegions = new Array();
+
+		for (let i = 0; i < retrievedHiddenRegions.length; i++)
+		{
+			let copiedHiddenRegion = new HiddenRegion(retrievedHiddenRegions[i].name);
+			copiedHiddenRegion.hiddenBlocks = retrievedHiddenRegions[i].hiddenBlocks;
+			this.hiddenRegions.push(copiedHiddenRegion);
 		}
 	}
 
@@ -186,6 +200,106 @@ class Map
 		{
 			let column = new Array(this.mapYDimension);
 			this.characterMatrix[i] = column;
+		}
+	}
+
+	/*
+	* Generates a hidden block matrix and a hidden regions array
+	*/
+	GenerateHiddenBlocKMatrix()
+	{
+		this.hiddenBlockMatrix = new Array(this.mapXDimension);
+		this.hiddenRegions = new Array();
+
+		for (let i = 0; i < this.characterMatrix.length; i++)
+		{
+			let column = new Array(this.mapYDimension);
+			column.fill(false);
+			this.hiddenBlockMatrix[i] = column;
+		}
+	}
+
+	AddBlockToHiddenRegion(x, y, regionName)
+	{		
+		for (let i = 0; i < this.hiddenRegions.length; i++)
+		{
+			if (this.hiddenRegions[i].name == regionName)
+			{
+				this.hiddenRegions[i].AddHiddenBlock(x, y);
+				this.hiddenBlockMatrix[x][y] = true;
+				break;
+			}
+		}
+	}
+
+	RemoveBlockFromHiddenRegion(x, y, regionName)
+	{		
+		for (let i = 0; i < this.hiddenRegions.length; i++)
+		{
+			if (this.hiddenRegions[i].name == regionName)
+			{
+				if (this.hiddenRegions[i].RemoveHiddenBlock(x, y))
+				{
+					this.hiddenBlockMatrix[x][y] = false;
+				}
+
+				break;
+			}
+		}
+	}
+
+	RevealHiddenRegion(regionName, isHidden)
+	{
+		let blocksToReveal;
+
+		for (let i = 0; i < this.hiddenRegions.length; i++)
+		{
+			if (this.hiddenRegions[i].name == regionName)
+			{
+				blocksToReveal = this.hiddenRegions[i].GetHiddenBlocks();
+				this.hiddenRegions[i].SetIsHidden(isHidden);
+				break;
+			}
+		}
+
+		for (let j = 0; j < blocksToReveal.length; j++)
+		{
+			const x = blocksToReveal[j].x;
+			const y = blocksToReveal[j].y;
+
+			this.hiddenBlockMatrix[x][y] = isHidden;
+		}
+	}
+
+	AddNewRegion(regionName)
+	{
+		if (regionName != null)
+		{
+			this.hiddenRegions.push(new HiddenRegion(regionName));
+		}
+	}
+
+	RemoveHiddenRegion(regionName)
+	{
+		let blocksToReveal;
+
+		for (let i = 0; i < this.hiddenRegions.length; i++)
+		{
+			if (this.hiddenRegions[i].name == regionName)
+			{
+				console.log(this.hiddenRegions[i].name);
+				blocksToReveal = this.hiddenRegions[i].GetHiddenBlocks().slice();
+				this.hiddenRegions.splice(i, 1);
+				break;
+			}
+		}
+
+		for (let j = 0; j < blocksToReveal.length; j++)
+		{
+			const x = blocksToReveal[j].x;
+			const y = blocksToReveal[j].y;
+
+			this.hiddenBlockMatrix[x][y] = false;
 		}
 	}
 

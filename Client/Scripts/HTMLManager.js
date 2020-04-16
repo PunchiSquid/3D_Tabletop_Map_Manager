@@ -370,6 +370,163 @@ class HTMLGenerator
 		closeButton.addEventListener('mousedown', closeLabelFunction.bind(this));
 	}
 
+	AddHiddenRegionMenu(hiddenRegions)
+	{
+		// Clear the existing labels
+		this.RemoveLabels();
+		
+		// Create a new label div
+		this.label = document.createElement("div");
+		this.label.className = "active_label";
+
+		// Create new headers and set the inner text
+		let hiddenRegionsTitle = document.createElement("h5");
+		hiddenRegionsTitle.textContent = "Hidden Regions";
+		hiddenRegionsTitle.style = "display: inline-block; padding-right: 10px;";
+
+		// Create form elements for new regions
+		let newRegionLabel = document.createElement("h5");
+		newRegionLabel.textContent = "New Region";
+		newRegionLabel.style = "display: inline-block; padding-right: 10px;";
+
+		let newRegionForm = document.createElement("input");
+		newRegionForm.setAttribute("type", "text");
+		newRegionForm.style = "display: inline-block";
+
+		// Create buttons
+		let closeButton = document.createElement("input");
+		closeButton.setAttribute("type", "button");
+		closeButton.setAttribute("value", "Close");
+
+		let newRegionButton = document.createElement("button");
+		newRegionButton.textContent = "New Region";
+
+		// Append the new label to the label container and label elements to the label
+		this.menuContainer.appendChild(this.label);
+		this.label.appendChild(newRegionLabel);
+		this.label.appendChild(newRegionForm);
+		this.label.appendChild(newRegionButton);
+		this.label.appendChild(hiddenRegionsTitle);
+
+		let regionListDiv = document.createElement("div");
+		this.label.appendChild(regionListDiv);
+
+		const clearRegionListFunction = function()
+		{``
+			while (regionListDiv.hasChildNodes())
+			{
+				regionListDiv.removeChild(regionListDiv.childNodes[0]);
+			}
+		}
+
+		const populateRegionListFunction = function()
+		{
+			let regions = this.mapScreen.mapMatrix.hiddenRegions.slice();
+
+			for (let i = 0; i < regions.length; i++)
+			{
+				let individualRegionDiv = document.createElement("div");
+				individualRegionDiv.style = "border-color: white; border-style: solid; border-radius: 10px; border-width: 1px;";
+
+				//let hiddenRegionContent = document.createElement("p");
+				individualRegionDiv.textContent = regions[i].name;
+
+				let revealToggle = document.createElement("input");
+				revealToggle.textContent = "Reveal";
+				revealToggle.setAttribute("type", "checkbox");
+				revealToggle.setAttribute("value", regions[i].name);
+				revealToggle.checked = regions[i].GetIsHidden();
+
+				let addButton = document.createElement("button");
+				addButton.textContent = "Add To";
+				addButton.setAttribute("value", regions[i].name);
+
+				let removeButton = document.createElement("button");
+				removeButton.textContent = "Remove From";
+				removeButton.setAttribute("value", regions[i].name);
+
+				let deleteRegionButton = document.createElement("button");
+				deleteRegionButton.textContent = "Delete";
+				deleteRegionButton.setAttribute("value", regions[i].name);
+
+				//individualRegionDiv.appendChild(hiddenRegionContent);
+				individualRegionDiv.appendChild(revealToggle);
+				individualRegionDiv.appendChild(addButton);
+				individualRegionDiv.appendChild(removeButton);
+				individualRegionDiv.appendChild(deleteRegionButton);
+
+				regionListDiv.appendChild(individualRegionDiv);
+
+				$(revealToggle).change(function()
+				{
+					let detail = { region: revealToggle.value, isHidden: revealToggle.checked };
+					let event = new CustomEvent("ToggleHiddenRegionVisibility", { detail: detail });
+					document.dispatchEvent(event);
+				});
+
+				$(addButton).click(function()
+				{
+					let detail = { region: addButton.value };
+					let event = new CustomEvent("SelectRegionToEdit", { detail: detail });
+					this.RemoveLabels();
+					document.dispatchEvent(event);
+
+					this.mapScreen.activeSelectType = SelectTypes.ADD_BLOCK_TO_REGION;
+
+				}.bind(this));
+
+				$(removeButton).click(function()
+				{
+					let detail = { region: removeButton.value };
+					let event = new CustomEvent("SelectRegionToEdit", { detail: detail });
+					this.RemoveLabels();
+					document.dispatchEvent(event);
+
+					this.mapScreen.activeSelectType = SelectTypes.REMOVE_BLOCK_FROM_REGION;
+
+				}.bind(this));
+
+				$(deleteRegionButton).click(function()
+				{
+					let detail = { region: deleteRegionButton.value };
+					let event = new CustomEvent("RemoveHiddenRegion", { detail: detail });
+					document.dispatchEvent(event);
+				});
+			}
+		}.bind(this);
+
+		populateRegionListFunction();
+
+		this.label.appendChild(closeButton);
+
+		/*
+		* Internal function for closing labels when the close button is clicked.
+		*/
+		const closeLabelFunction = function()
+		{
+			this.RemoveLabels();
+		}
+
+		// Register event listeners for label HTML interactions.
+		closeButton.addEventListener('mousedown', closeLabelFunction.bind(this));
+		newRegionButton.addEventListener('mousedown', function()
+		{
+			if (newRegionForm.value != null)
+			{
+				let detail = { region: newRegionForm.value };
+				let event = new CustomEvent("AddNewHiddenRegion", { detail: detail });
+				document.dispatchEvent(event);
+			}
+		})
+
+		document.addEventListener("RefreshLists", function()
+		{
+			clearRegionListFunction();
+			populateRegionListFunction();
+			
+		}.bind(this));
+	}
+
 	/*
 	* Moves existing labels to update locations based on the moving 3D space.
 	*/

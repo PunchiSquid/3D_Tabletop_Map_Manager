@@ -3,7 +3,10 @@ SelectTypes =
 	SELECT: "select",
 	ADD: "add",
 	REMOVE: "remove",
-	CHARACTER: "character"
+	CHARACTER: "character",
+	HIDDEN_REGION: "hidden_region",
+	ADD_BLOCK_TO_REGION: "add_block_to_region",
+	REMOVE_BLOCK_FROM_REGION: "remove_block_from_region"
 };
 
 SessionTypes = 
@@ -97,6 +100,12 @@ class MapScreen
 		document.addEventListener("SetBlockHeight", this.SetBlockHeight.bind(this))
 		document.addEventListener("UpdateMap", this.UpdateMap.bind(this));
 		document.addEventListener("MoveCharacter", this.PickUpCharacter.bind(this));
+		document.addEventListener("AddBlockToHiddenRegion", this.AddBlockToHiddenRegion.bind(this));
+		document.addEventListener("RemoveBlockFromHiddenRegion", this.RemoveBlockFromHiddenRegion.bind(this));
+		document.addEventListener("ToggleHiddenRegionVisibility", this.ToggleRegionVisibility.bind(this));
+		document.addEventListener("AddNewHiddenRegion", this.AddNewRegion.bind(this));
+		document.addEventListener("RemoveHiddenRegion", this.RemoveRegion.bind(this));
+		document.addEventListener("SelectRegionToEdit", this.SelectRegionToEdit.bind(this));
 	}
 
 	RenderScene()
@@ -131,20 +140,41 @@ class MapScreen
 		let instancedGeometry = new THREE.InstancedBufferGeometry();
 		instancedGeometry.fromGeometry(boxGeometry);
 
+		// Set up the box materials
 		var instancedMaterials = 
 		[
 			new THREE.MeshPhongMaterial( { map: this.sideTexture }),
 			new THREE.MeshPhongMaterial( { map: this.sideTexture }),
-			new THREE.MeshPhongMaterial( { map: this.topTexture }),
+			new THREE.MeshPhongMaterial( { map: this.topTexture, vertexColors: THREE.VertexColors }),
 			new THREE.MeshPhongMaterial( { map: this.sideTexture }),
 			new THREE.MeshPhongMaterial( { map: this.sideTexture }),
 			new THREE.MeshPhongMaterial( { map: this.sideTexture }),
 		];
 
+		// Set up a colour buffer for the box mesh
+		instancedGeometry.setAttribute( 'color', new THREE.InstancedBufferAttribute( this.mapMatrix.colourArray, 3 ) );
+
 		// Set up the final instanced mesh and add to the scene
 		this.mapMesh = new THREE.InstancedMesh( instancedGeometry, instancedMaterials, this.count);
 		this.mapMesh.instanceMatrix.setUsage( THREE.DynamicDrawUsage ); // will be updated every frame
 		this.scene.add(this.mapMesh);
+
+		// Set up the instanced hidden box geometry
+		boxGeometry = new THREE.BoxGeometry( 0.75, 1, 0.75);
+		let hiddenInstancedGeometry = new THREE.InstancedBufferGeometry();
+		hiddenInstancedGeometry.fromGeometry(boxGeometry);
+
+		// Set up the instanced hidden box material
+		let hiddenMaterial = new THREE.MeshPhongMaterial();
+		hiddenMaterial.color = new THREE.Color("grey");
+		hiddenMaterial.opacity = 0.75;
+		hiddenMaterial.transparent = true;
+
+		// Set up the final instanced mesh and add to the scene
+		this.hiddenMesh = new THREE.InstancedMesh( hiddenInstancedGeometry, hiddenMaterial, this.count);
+		this.hiddenMesh.name = "Hidden Blocks";
+		this.hiddenMesh.instanceMatrix.setUsage( THREE.DynamicDrawUsage ); // will be updated every frame
+		this.scene.add(this.hiddenMesh);
 
 		// Set up the character cylinder geometry and material
 		var characterGeometry = new THREE.CylinderGeometry( 0.75, 0, 2, 8 );
@@ -156,23 +186,48 @@ class MapScreen
 		// Iterate through the height map and move instances to fill the generated map
 		const matrix = new THREE.Matrix4();
 		const dummy = new THREE.Object3D();
-		let offset = 0;
+		const hiddenDummy = new THREE.Object3D();
+		let gridOffset = 0;
+		let hiddenOffset = 0;
 
 		for (let i = 0; i < this.mapMatrix.heightMap.length; i++)
 		{
 			for (let j = 0; j < this.mapMatrix.heightMap[i].length; j++)
 			{
 				// Retrieve each instance transformation matrix
-				offset++;
-				this.mapMesh.getMatrixAt(offset, matrix);
+				gridOffset++;
+				this.mapMesh.getMatrixAt(gridOffset, matrix);
 				let value = this.mapMatrix.heightMap[i][j];
 
 				// Set a dummy object position to transform the instance being modified
 				dummy.position.set(i, value / 2, j);
 				dummy.updateMatrix();
-				dummy.matrix.elements[5] = value;
-				dummy.matrix.elements[13] = value / 2;
-				this.mapMesh.setMatrixAt( offset, dummy.matrix );
+
+				if (this.mapMatrix.hiddenBlockMatrix[i][j] == true)
+				{
+					dummy.matrix.elements[5] = 1;
+					dummy.matrix.elements[13] = 1 / 2;
+
+					if (this.sessionType != SessionTypes.CLIENT)
+					{
+						// Set a dummy object position to transform the instance being modified
+						hiddenDummy.position.set(i, value / 2, j);
+						hiddenDummy.updateMatrix();
+
+						hiddenDummy.matrix.elements[5] = value + 0.15;
+						hiddenDummy.matrix.elements[13] = value / 2;
+						this.hiddenMesh.setMatrixAt(hiddenOffset, hiddenDummy.matrix);
+
+						hiddenOffset++;
+					}
+				}
+				else
+				{
+					dummy.matrix.elements[5] = value;
+					dummy.matrix.elements[13] = value / 2;
+				}
+
+				this.mapMesh.setMatrixAt( gridOffset, dummy.matrix );
 
 				// If a character is present on a space, add a character token to that space in the render
 				if (this.mapMatrix.GetCharacter(i, j) != null)
@@ -187,6 +242,7 @@ class MapScreen
 
 		// Flag the matrix for updating
 		this.mapMesh.instanceMatrix.needsUpdate = true;
+		this.hiddenMesh.instanceMatrix.needsUpdate = true;
 
 		// Create a new helper class to assist in raycasting and object picking, then begin the render cycle
 		this.pickHelper = new InstancedObjectPicker(this.scene);
@@ -201,7 +257,13 @@ class MapScreen
 
 	UpdateMap()
 	{
-		this.socket.emit("host_send_map", this.mapMatrix);
+		if (this.sessionType == SessionTypes.HOST || this.sessionType == SessionTypes.CLIENT)
+		{
+			this.socket.emit("host_send_map", this.mapMatrix);
+			console.log("W");
+		}
+
+		this.RenderScene();
 	}
 
 	/*
@@ -344,7 +406,6 @@ class MapScreen
 			this.InitialiseEventListeners();
 
 		}.bind(this));
-
 	}
 
 	/*
@@ -487,6 +548,71 @@ class MapScreen
 
 			// Add a label
 			this.html.AddLabel(x, y, object, instance, active);
+		}
+	}
+
+	ToggleRegionVisibility(e)
+	{
+		// Store event variables for shortened code
+		let region = e.detail.region;
+		let isHidden = e.detail.isHidden;
+
+		this.mapMatrix.RevealHiddenRegion(region, isHidden);
+
+		document.dispatchEvent(new Event("UpdateMap"));
+	}
+
+	AddNewRegion(e)
+	{
+		// Store event variables for shortened code
+		let region = e.detail.region;
+		this.mapMatrix.AddNewRegion(region);
+
+		document.dispatchEvent(new Event("UpdateMap"));
+		document.dispatchEvent(new Event("RefreshLists"));
+	}
+
+	RemoveRegion(e)
+	{
+		let region = e.detail.region;
+		this.mapMatrix.RemoveHiddenRegion(region);
+
+		document.dispatchEvent(new Event("UpdateMap"));
+		document.dispatchEvent(new Event("RefreshLists"));
+	}
+
+	SelectRegionToEdit(e)
+	{
+		this.SelectedRegion = e.detail.region;
+	}
+
+	AddBlockToHiddenRegion(e)
+	{
+		if (this.SelectedRegion != null)
+		{
+			// Retrieve matrix data
+			let matrix = new THREE.Matrix4();
+			this.mapMesh.getMatrixAt(e.detail.instance, matrix);
+
+			this.mapMatrix.AddBlockToHiddenRegion(matrix.elements[12], matrix.elements[14], this.SelectedRegion);
+
+			document.dispatchEvent(new Event("UpdateMap"));
+		}
+	}
+
+	RemoveBlockFromHiddenRegion(e)
+	{
+		console.log(this.SelectedRegion);
+
+		if (this.SelectedRegion != null)
+		{
+			// Retrieve matrix data
+			let matrix = new THREE.Matrix4();
+			this.mapMesh.getMatrixAt(e.detail.instance, matrix);
+
+			this.mapMatrix.RemoveBlockFromHiddenRegion(matrix.elements[12], matrix.elements[14], this.SelectedRegion);
+
+			document.dispatchEvent(new Event("UpdateMap"));
 		}
 	}
 
@@ -680,7 +806,15 @@ class MapScreen
 
 			// Create the mesh, set the position and add to the this.scene
 			this.cursorMesh = new THREE.Mesh( hoverBoxGeometry, hoverMaterial);
-			this.cursorMesh.position.set(matrix.elements[12], matrix.elements[13], matrix.elements[14]);
+
+			if (this.sessionType == SessionTypes.CLIENT)
+			{
+				this.cursorMesh.position.set(matrix.elements[12], 0.5, matrix.elements[14]);
+			}
+			else
+			{
+				this.cursorMesh.position.set(matrix.elements[12], value / 2, matrix.elements[14]);
+			}
 
 			this.scene.add(this.cursorMesh);
 		}
@@ -780,6 +914,7 @@ class MapScreen
 		let deleteButton = document.getElementById("button_delete");
 		let characterButton = document.getElementById("button_character");
 		let saveButton = document.getElementById("button_save");
+    let hiddenButton = document.getElementById("button_hiddenblocks");
 
 		if (selectButton) selectButton.addEventListener("click", function()
 		{
@@ -810,6 +945,15 @@ class MapScreen
 		{
 			this.activeSelectType = SelectTypes.CHARACTER;
 			this.html.RemoveLabels();
+			SetButtonBorder();
+
+		}.bind(this));
+    
+    if (hiddenButton).addEventListener("click", function()
+		{
+			this.activeSelectType = SelectTypes.HIDDEN_REGION;
+			this.html.RemoveLabels();
+			this.html.AddHiddenRegionMenu(this.mapMatrix.hiddenRegions);
 			SetButtonBorder();
 
 		}.bind(this));
@@ -871,11 +1015,13 @@ function SetButtonBorder()
 	let addButton = document.getElementById("button_add");
 	let deleteButton = document.getElementById("button_delete");
 	let characterButton = document.getElementById("button_character");
+	let hiddenButton = document.getElementById("button_hiddenblocks");
 
 	if (selectButton) selectButton.classList.toggle('active_button', false);
 	if (addButton) addButton.classList.toggle('active_button', false);
 	if (deleteButton) deleteButton.classList.toggle('active_button', false);
 	if (characterButton) characterButton.classList.toggle('active_button', false);
+  if (hiddenButton) hiddenButton.classList.toggle('active_button', false);
 
 	switch(screen.activeSelectType)
 	{
@@ -891,8 +1037,9 @@ function SetButtonBorder()
 		case SelectTypes.CHARACTER:
 			if (characterButton) characterButton.classList.toggle('active_button', true);
 			break;
+		case SelectTypes.HIDDEN_REGION:
+			hiddenButton.classList.toggle('active_button', true);
 		default:
-			console.log("None");
 			break;
 	}
 }
