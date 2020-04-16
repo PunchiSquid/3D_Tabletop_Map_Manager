@@ -482,8 +482,11 @@ class MapScreen
 			let x = (tempVector.x *  .5 + .5) * this.canvas.clientWidth;
 			let y = (tempVector.y * -.5 + .5) * this.canvas.clientHeight;
 
+			// Only allow editing if the map is currently hosted or being edited
+			let active = (this.sessionType == SessionTypes.HOST || this.sessionType == SessionTypes.EDIT);
+
 			// Add a label
-			this.html.AddLabel(x, y, object, instance);
+			this.html.AddLabel(x, y, object, instance, active);
 		}
 	}
 
