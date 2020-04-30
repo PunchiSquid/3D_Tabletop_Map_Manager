@@ -47,7 +47,7 @@ class InstancedObjectPicker
 		{
 			if (this.scene.children[i].name == "Hidden Blocks")
 			{
-				selectArray.splice(i);
+				selectArray.splice(i, 1);
 				break;
 			}
 		}
