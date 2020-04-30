@@ -235,7 +235,8 @@ app.post("/user-accounts", function(request, response)
 	{
 		username: body.username,
 		password: body.password,
-		emailAddress: body.emailAddress
+		emailAddress: body.emailAddress,
+		mapRecords: new Array()
 	}
 	
 	// Create a second JSON object for user authentication
