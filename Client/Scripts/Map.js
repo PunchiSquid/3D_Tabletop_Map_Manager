@@ -72,7 +72,6 @@ class Map
 			// Upon success load the data from the map record into the current map object and resolve
 			request.done(function(data, status)
 			{
-				console.log(data);
 				this.LoadFromRecord(data);
 				resolve(status);
 
