@@ -752,6 +752,10 @@ class MapScreen
 				// Add to the scene
 				this.scene.add(characterMesh);
 			}
+			else
+			{
+				characterMesh = this.RetrieveCharacterObject(locationMatrix.x, locationMatrix.z);
+			}
 
 			// Retrieve the world position projected from the camera
 			let dummy = new THREE.Object3D();
@@ -830,11 +834,11 @@ class MapScreen
 		this.scene.remove(object);
 	}
 
-	RepositionCharacter(x, y, z)
+	RetrieveCharacterObject(x, z)
 	{
 		// Iterate through every object in the scene
 		let count = this.scene.children.length;
-
+		
 		for (let i = 0; i < count; i++)
 		{
 			let object = this.scene.children[i];
@@ -844,11 +848,18 @@ class MapScreen
 			{
 				if (object.name == "Character")
 				{
-					object.position.y = y + 1;
-					break;
+					return object;
 				}
 			}
 		}
+
+		return null;
+	}
+
+	RepositionCharacter(x, y, z)
+	{
+		let object = this.RetrieveCharacterObject(x, z);
+		object.position.y = y + 1;
 	}
 
 	/*
