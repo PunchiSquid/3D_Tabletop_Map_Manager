@@ -198,7 +198,7 @@ module.exports = class MongoConnection
 	* @Param inputData The input user data to authenticate against the database.
 	*/
 	AuthenticateAccount(inputData)
-	{		
+	{
 		// Create a local variable for the URL. The Promise seems to be unable to access the properties of the class.
 		let promiseURL = this.url;
 		
@@ -228,6 +228,7 @@ module.exports = class MongoConnection
 					bcrypt.compare(inputData.password, response.password).then(function(result)
 					{					
 						let finalResponse = {_id: response._id, result: result};
+						dbResponse.close();
 						resolve(finalResponse);
 					})
 					.catch(function (error) 
