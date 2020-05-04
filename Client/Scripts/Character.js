@@ -38,5 +38,3 @@ class Character
         return this.owner;
     }
 }
-
-module.exports = Character;

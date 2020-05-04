@@ -72,7 +72,6 @@ class Map
 			// Upon success load the data from the map record into the current map object and resolve
 			request.done(function(data, status)
 			{
-				console.log(data);
 				this.LoadFromRecord(data);
 				resolve(status);
 
@@ -102,7 +101,6 @@ class Map
 		this.mapYDimension = mapRecord.mapYDimension;
 		this.heightMap = mapRecord.heightMap;
 		this.detailMatrix = mapRecord.detailMatrix;
-		this.characterMatrix = mapRecord.characterMatrix;
 
 		if (mapRecord.hiddenBlockMatrix && mapRecord.hiddenRegions)
 		{
@@ -115,6 +113,7 @@ class Map
 		}
 
 		this.CopyColourArray(mapRecord.colourArray);
+		this.CopyCharacterArray(mapRecord.characterMatrix);
 	}
 
 	/*
@@ -145,6 +144,29 @@ class Map
 			let copiedHiddenRegion = new HiddenRegion(retrievedHiddenRegions[i].name);
 			copiedHiddenRegion.hiddenBlocks = retrievedHiddenRegions[i].hiddenBlocks;
 			this.hiddenRegions.push(copiedHiddenRegion);
+		}
+	}
+
+	CopyCharacterArray(retrievedCharacterArray)
+	{
+		this.GenerateCharacterMatrix();
+
+		console.log(retrievedCharacterArray);
+
+		for (let i = 0; i < retrievedCharacterArray.length; i++)
+		{
+			for (let j = 0; j < retrievedCharacterArray[i].length; j++)
+			{
+				if (retrievedCharacterArray[i][j] != null)
+				{
+					let copiedCharacter = new Character(retrievedCharacterArray[i][j].owner);
+					copiedCharacter.SetCharacterName(retrievedCharacterArray[i][j].name);
+					copiedCharacter.SetCharacterNotes(retrievedCharacterArray[i][j].notes);
+					this.characterMatrix[i][j] = copiedCharacter;
+
+					console.log(this.characterMatrix[i][j]);
+				}
+			}
 		}
 	}
 

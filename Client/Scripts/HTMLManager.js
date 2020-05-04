@@ -370,7 +370,7 @@ class HTMLGenerator
 		closeButton.addEventListener('mousedown', closeLabelFunction.bind(this));
 	}
 
-	AddHiddenRegionMenu(hiddenRegions)
+	AddHiddenRegionMenu()
 	{
 		// Clear the existing labels
 		this.RemoveLabels();
