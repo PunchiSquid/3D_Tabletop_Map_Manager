@@ -859,7 +859,10 @@ class MapScreen
 	RepositionCharacter(x, y, z)
 	{
 		let object = this.RetrieveCharacterObject(x, z);
-		object.position.y = y + 1;
+		if (object)
+		{
+			object.position.y = y + 1;
+		}
 	}
 
 	/*
