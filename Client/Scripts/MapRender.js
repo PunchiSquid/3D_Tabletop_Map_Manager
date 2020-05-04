@@ -942,7 +942,7 @@ class MapScreen
 		{
 			this.activeSelectType = SelectTypes.ADD;
 			this.html.RemoveLabels();
-			this.html.AddDrawMenu();
+			this.html.AddDrawMenu(true);
 			SetButtonBorder();
 
 		}.bind(this));
@@ -951,6 +951,7 @@ class MapScreen
 		{
 			this.activeSelectType = SelectTypes.REMOVE;
 			this.html.RemoveLabels();
+			this.html.AddDrawMenu(false);
 			SetButtonBorder();
 
 		}.bind(this));

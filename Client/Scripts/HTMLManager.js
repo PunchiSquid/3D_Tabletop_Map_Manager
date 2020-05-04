@@ -293,7 +293,7 @@ class HTMLGenerator
 		closeButton.addEventListener('mousedown', closeLabelFunction.bind(this));
 	}
 
-	AddDrawMenu()
+	AddDrawMenu(isAdding)
 	{
 		// Clear the existing labels
 		this.RemoveLabels();
@@ -308,7 +308,15 @@ class HTMLGenerator
 		brushSizeTitle.style = "display: inline-block; padding-right: 10px;";
 
 		let brushValueTitle = document.createElement("p");
-		brushValueTitle.textContent = "Increment Value";
+
+		if (isAdding)
+		{
+			brushValueTitle.textContent = "Increment Value";
+		}
+		else
+		{
+			brushValueTitle.textContent = "Decrement Value";
+		}
 
 		// Create forms and fill with retrieved values
 		let brushSizeForm = document.createElement("input");
