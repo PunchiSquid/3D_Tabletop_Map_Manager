@@ -813,7 +813,14 @@ class MapScreen
 			}
 			else
 			{
-				hoverBoxGeometry = new THREE.BoxGeometry(1.25, value + 0.25, 1.25);
+				if (this.sessionType == SessionTypes.CLIENT)
+				{
+					hoverBoxGeometry = new THREE.BoxGeometry(1.25, matrix.elements[5] +  0.25, 1.25);
+				}
+				else
+				{
+					hoverBoxGeometry = new THREE.BoxGeometry(1.25, value + 0.25, 1.25);
+				}
 			}
 
 			// Set a material for the hovering box
