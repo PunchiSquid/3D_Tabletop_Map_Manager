@@ -824,7 +824,7 @@ class MapScreen
 
 			if (this.sessionType == SessionTypes.CLIENT)
 			{
-				this.cursorMesh.position.set(matrix.elements[12], 0.5, matrix.elements[14]);
+				this.cursorMesh.position.set(matrix.elements[12], matrix.elements[5] / 2, matrix.elements[14]);
 			}
 			else
 			{
