@@ -799,8 +799,17 @@ class MapScreen
 			// Retrieve the height value from the map matrix
 			let value = this.mapMatrix.heightMap[matrix.elements[12]][matrix.elements[14]];
 
+			let hoverBoxGeometry;
+
 			// Set the dimensions of the cube
-			let hoverBoxGeometry = new THREE.BoxGeometry(this.brushSize + 0.25, value + 0.25, this.brushSize + 0.25);
+			if (this.activeSelectType == SelectTypes.ADD || this.activeSelectType == SelectTypes.REMOVE)
+			{
+				hoverBoxGeometry = new THREE.BoxGeometry(this.brushSize + 0.25, value + 0.25, this.brushSize + 0.25);
+			}
+			else
+			{
+				hoverBoxGeometry = new THREE.BoxGeometry(1.25, value + 0.25, 1.25);
+			}
 
 			// Set a material for the hovering box
 			let hoverMaterial = new THREE.MeshPhongMaterial();
