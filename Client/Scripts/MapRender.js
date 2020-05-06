@@ -654,10 +654,8 @@ class MapScreen
 
 		// Store the character temporarily
 		this.pickedUpCharacter = this.mapMatrix.GetCharacter(object.position.x, object.position.z);
-
-		// Set the character matrix in the corresponding position to null and remove the rendered object
-		this.mapMatrix.SetCharacter(object.position.x, object.position.z, null);
-		this.scene.remove(object);
+		this.pickedUpObject = this.RetrieveCharacterObject(object.position.x, object.position.z);
+		this.pickedUpObject.material.color.set(new THREE.Color("grey"));
 	}
 
 	/*
@@ -723,8 +721,12 @@ class MapScreen
 				if (this.pickedUpCharacter)
 				{
 					// Set picked up character in the map
+					this.mapMatrix.SetCharacter(this.pickedUpObject.position.x, this.pickedUpObject.position.z, null);
 					this.mapMatrix.SetCharacter(locationMatrix.x, locationMatrix.z, this.pickedUpCharacter);
+					this.scene.remove(this.pickedUpObject);
+
 					this.pickedUpCharacter = null;
+					this.pickedUpObject = null;
 				}
 				else
 				{
