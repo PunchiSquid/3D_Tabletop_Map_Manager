@@ -109,7 +109,36 @@ io.on("connection", function (socket)
 // Default route. Directs to a log-in page
 app.get("/", function(request, response)
 {
-	response.sendFile("/Client/login.html", {"root": __dirname + "/../"});
+	if (request.session.userID)
+	{
+		// Check the username in the session exists on the database
+		let connection = new MongoConnection(uri);
+		connection.GetUserAccountByUsername(request.session.username).then(function(res)
+		{
+			if (res)
+			{
+				response.redirect("/list");
+			}
+			else
+			{
+				// Reset user session if the account does not exist. 
+				request.session.destroy();
+				response.cookie("Alert", "Session invalid. Please log in.", {maxAge: 30000});
+				response.redirect("/");
+			}
+		})
+		.catch(function(err)
+		{
+			// Reset user session if the account does not exist. 
+			request.session.destroy();
+			response.cookie("Alert", "Session invalid. Please log in.", {maxAge: 30000});
+			response.redirect("/");
+		});
+	}
+	else
+	{
+		response.sendFile("/Client/login.html", {"root": __dirname + "/../"});
+	}
 });
 
 // Registration route
@@ -121,7 +150,35 @@ app.get("/register", function(request, response)
 // List route
 app.get("/list", function(request, response)
 {
-	response.sendFile("/Client/list.html", {"root": __dirname + "/../"});
+	if (request.session.userID)
+	{
+		// Check the username in the session exists on the database
+		let connection = new MongoConnection(uri);
+		connection.GetUserAccountByUsername(request.session.username).then(function(res)
+		{
+			if (res)
+			{
+				response.sendFile("/Client/list.html", {"root": __dirname + "/../"});
+			}
+			else
+			{
+				// Reset user session if the account does not exist. 
+				request.session.destroy();
+				response.cookie("Alert", "Session invalid. Please log in.", {maxAge: 30000});
+				response.redirect("/");
+			}
+		})
+		.catch(function(err)
+		{
+			response.cookie("Alert", "Session invalid. Please log in.", {maxAge: 30000});
+			response.redirect("/");
+		});
+	}
+	else
+	{
+		response.cookie("Alert", "Session invalid. Please log in.", {maxAge: 30000});
+		response.redirect("/");
+	}
 });
 
 // Host and editor route
