@@ -176,12 +176,8 @@ class MapScreen
 		this.hiddenMesh.instanceMatrix.setUsage( THREE.DynamicDrawUsage ); // will be updated every frame
 		this.scene.add(this.hiddenMesh);
 
-		// Set up the character cylinder geometry and material
+		// Set up the character cylinder geometry
 		var characterGeometry = new THREE.CylinderGeometry( 0.75, 0, 2, 8 );
-		let characterMaterial = new THREE.MeshPhongMaterial();
-		characterMaterial.color = new THREE.Color("red");
-		characterMaterial.opacity = 0.75;
-		characterMaterial.transparent = true;
 
 		// Iterate through the height map and move instances to fill the generated map
 		const matrix = new THREE.Matrix4();
@@ -232,6 +228,13 @@ class MapScreen
 				// If a character is present on a space, add a character token to that space in the render
 				if (this.mapMatrix.GetCharacter(i, j) != null)
 				{
+					// Set up individual materials for each character token
+					const characterMaterial = new THREE.MeshPhongMaterial();
+					characterMaterial.color = new THREE.Color("red");
+					characterMaterial.opacity = 0.75;
+					characterMaterial.transparent = true;
+					
+					// Create the mesh and set the position
 					let characterMesh = new THREE.Mesh( characterGeometry, characterMaterial);
 					characterMesh.position.set(i, value + 1.25, j);
 					characterMesh.name = "Character";
