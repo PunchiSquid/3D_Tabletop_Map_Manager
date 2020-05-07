@@ -152,8 +152,6 @@ class Map
 	{
 		this.GenerateCharacterMatrix();
 
-		console.log(retrievedCharacterArray);
-
 		for (let i = 0; i < retrievedCharacterArray.length; i++)
 		{
 			for (let j = 0; j < retrievedCharacterArray[i].length; j++)
@@ -164,8 +162,6 @@ class Map
 					copiedCharacter.SetCharacterName(retrievedCharacterArray[i][j].name);
 					copiedCharacter.SetCharacterNotes(retrievedCharacterArray[i][j].notes);
 					this.characterMatrix[i][j] = copiedCharacter;
-
-					console.log(this.characterMatrix[i][j]);
 				}
 			}
 		}
