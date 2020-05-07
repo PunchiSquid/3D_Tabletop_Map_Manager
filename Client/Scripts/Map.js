@@ -143,6 +143,7 @@ class Map
 		{
 			let copiedHiddenRegion = new HiddenRegion(retrievedHiddenRegions[i].name);
 			copiedHiddenRegion.hiddenBlocks = retrievedHiddenRegions[i].hiddenBlocks;
+			copiedHiddenRegion.isHidden = retrievedHiddenRegions[i].isHidden;
 			this.hiddenRegions.push(copiedHiddenRegion);
 		}
 	}
