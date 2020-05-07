@@ -399,6 +399,7 @@ class HTMLGenerator
 
 		let newRegionForm = document.createElement("input");
 		newRegionForm.setAttribute("type", "text");
+		newRegionForm.setAttribute("placeholder", "Region Name");
 		newRegionForm.style = "display: inline-block";
 
 		// Create buttons
@@ -434,40 +435,61 @@ class HTMLGenerator
 			for (let i = 0; i < regions.length; i++)
 			{
 				let individualRegionDiv = document.createElement("div");
-				individualRegionDiv.style = "border-color: white; border-style: solid; border-radius: 10px; border-width: 1px;";
+				individualRegionDiv.style = "border-color: white; border-style: solid; border-radius: 10px; border-width: 1px; margin-bottom: 8px; padding: 4px;";
 
-				//let hiddenRegionContent = document.createElement("p");
 				individualRegionDiv.textContent = regions[i].name;
 
-				let revealToggle = document.createElement("input");
-				revealToggle.textContent = "Reveal";
-				revealToggle.setAttribute("type", "checkbox");
+				let revealToggle = document.createElement("button");
 				revealToggle.setAttribute("value", regions[i].name);
-				revealToggle.checked = regions[i].GetIsHidden();
+
+				if (regions[i].GetIsHidden())
+				{
+					revealToggle.textContent = "Reveal";
+				}
+				else
+				{
+					revealToggle.textContent = "Hide";
+				}
 
 				let addButton = document.createElement("button");
-				addButton.textContent = "Add To";
+				addButton.textContent = "+";
 				addButton.setAttribute("value", regions[i].name);
+				addButton.style = "float: right;";
 
 				let removeButton = document.createElement("button");
-				removeButton.textContent = "Remove From";
+				removeButton.textContent = "-";
 				removeButton.setAttribute("value", regions[i].name);
+				removeButton.style = "float: right;";
 
 				let deleteRegionButton = document.createElement("button");
-				deleteRegionButton.textContent = "Delete";
+				deleteRegionButton.textContent = "X";
 				deleteRegionButton.setAttribute("value", regions[i].name);
+				deleteRegionButton.style = "float: right;";
 
-				//individualRegionDiv.appendChild(hiddenRegionContent);
+				individualRegionDiv.appendChild(document.createElement("br"));
 				individualRegionDiv.appendChild(revealToggle);
-				individualRegionDiv.appendChild(addButton);
-				individualRegionDiv.appendChild(removeButton);
 				individualRegionDiv.appendChild(deleteRegionButton);
+				individualRegionDiv.appendChild(removeButton);
+				individualRegionDiv.appendChild(addButton);
 
 				regionListDiv.appendChild(individualRegionDiv);
 
-				$(revealToggle).change(function()
+				$(revealToggle).click(function()
 				{
-					let detail = { region: revealToggle.value, isHidden: revealToggle.checked };
+					let hiddenValue;
+
+					if (revealToggle.textContent == "Reveal")
+					{
+						hiddenValue = false;
+						revealToggle.textContent = "Hide";
+					}
+					else
+					{
+						hiddenValue = true;
+						revealToggle.textContent = "Reveal";
+					}
+
+					let detail = { region: revealToggle.value, isHidden: hiddenValue };
 					let event = new CustomEvent("ToggleHiddenRegionVisibility", { detail: detail });
 					document.dispatchEvent(event);
 				});

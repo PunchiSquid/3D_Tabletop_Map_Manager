@@ -143,6 +143,7 @@ class Map
 		{
 			let copiedHiddenRegion = new HiddenRegion(retrievedHiddenRegions[i].name);
 			copiedHiddenRegion.hiddenBlocks = retrievedHiddenRegions[i].hiddenBlocks;
+			copiedHiddenRegion.isHidden = retrievedHiddenRegions[i].isHidden;
 			this.hiddenRegions.push(copiedHiddenRegion);
 		}
 	}
@@ -150,8 +151,6 @@ class Map
 	CopyCharacterArray(retrievedCharacterArray)
 	{
 		this.GenerateCharacterMatrix();
-
-		console.log(retrievedCharacterArray);
 
 		for (let i = 0; i < retrievedCharacterArray.length; i++)
 		{
@@ -163,8 +162,6 @@ class Map
 					copiedCharacter.SetCharacterName(retrievedCharacterArray[i][j].name);
 					copiedCharacter.SetCharacterNotes(retrievedCharacterArray[i][j].notes);
 					this.characterMatrix[i][j] = copiedCharacter;
-
-					console.log(this.characterMatrix[i][j]);
 				}
 			}
 		}

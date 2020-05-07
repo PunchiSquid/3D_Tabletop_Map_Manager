@@ -228,17 +228,37 @@ class MapScreen
 				// If a character is present on a space, add a character token to that space in the render
 				if (this.mapMatrix.GetCharacter(i, j) != null)
 				{
-					// Set up individual materials for each character token
-					const characterMaterial = new THREE.MeshPhongMaterial();
-					characterMaterial.color = new THREE.Color("red");
-					characterMaterial.opacity = 0.75;
-					characterMaterial.transparent = true;
-					
-					// Create the mesh and set the position
-					let characterMesh = new THREE.Mesh( characterGeometry, characterMaterial);
-					characterMesh.position.set(i, value + 1.25, j);
-					characterMesh.name = "Character";
-					this.scene.add(characterMesh);
+					if (this.sessionType == SessionTypes.CLIENT)
+					{
+						if (!this.mapMatrix.hiddenBlockMatrix[i][j])
+						{
+							// Set up individual materials for each character token
+							const characterMaterial = new THREE.MeshPhongMaterial();
+							characterMaterial.color = new THREE.Color("red");
+							characterMaterial.opacity = 0.75;
+							characterMaterial.transparent = true;
+							
+							// Create the mesh and set the position
+							let characterMesh = new THREE.Mesh( characterGeometry, characterMaterial);
+							characterMesh.position.set(i, value + 1.25, j);
+							characterMesh.name = "Character";
+							this.scene.add(characterMesh);
+						}
+					}
+					else
+					{
+						// Set up individual materials for each character token
+						const characterMaterial = new THREE.MeshPhongMaterial();
+						characterMaterial.color = new THREE.Color("red");
+						characterMaterial.opacity = 0.75;
+						characterMaterial.transparent = true;
+						
+						// Create the mesh and set the position
+						let characterMesh = new THREE.Mesh( characterGeometry, characterMaterial);
+						characterMesh.position.set(i, value + 1.25, j);
+						characterMesh.name = "Character";
+						this.scene.add(characterMesh);
+					}
 				}
 			}
 		}
