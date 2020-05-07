@@ -43,6 +43,7 @@ class InstancedObjectPicker
 		this.raycaster.setFromCamera(mousePosition, camera);
 		let selectArray = this.scene.children.slice();
 
+		/*
 		for (let i = 0; i < this.scene.children.length; i++)
 		{
 			if (this.scene.children[i].name == "Hidden Blocks")
@@ -51,6 +52,7 @@ class InstancedObjectPicker
 				break;
 			}
 		}
+		*/
 
 		// get the list of objects the ray intersected
 		const intersectedObjects = this.raycaster.intersectObjects(selectArray);
@@ -109,7 +111,12 @@ class InstancedObjectPicker
 		// If objects have been intersected
 		if (intersectedObjects.length) 
 		{
-			let detail = { instance: this.pickedClickInstance };
+			let detail = 
+			{ 
+				instance: this.pickedClickInstance,
+				object: this.pickedClickObject 
+			};
+
 			let event = new CustomEvent("CursorHover", { detail: detail });
 			document.dispatchEvent(event);
 		}
@@ -135,7 +142,12 @@ class InstancedObjectPicker
 	*/
 	AddValueToBlock()
 	{
-		let detail = { instance: this.pickedClickInstance };
+		let detail = 
+		{ 
+			instance: this.pickedClickInstance,
+			object: this.pickedClickObject 
+		};
+
 		let event = new CustomEvent("DrawBlock", { detail: detail });
 		document.dispatchEvent(event);
     }
@@ -145,7 +157,12 @@ class InstancedObjectPicker
 	*/
 	SelectBlock()
 	{
-		let detail = { instance: this.pickedClickInstance };
+		let detail = 
+		{ 
+			instance: this.pickedClickInstance,
+			object: this.pickedClickObject 
+		};
+		
 		let event = new CustomEvent("SelectBlock", { detail: detail });
 		document.dispatchEvent(event);
 	}
@@ -164,8 +181,6 @@ class InstancedObjectPicker
 
 	RemoveBlockFromRegion()
 	{
-		console.log("Woo");
-
 		let detail = 
 		{ 
 			instance: this.pickedClickInstance,
