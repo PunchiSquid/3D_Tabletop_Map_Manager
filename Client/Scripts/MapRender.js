@@ -168,7 +168,7 @@ class MapScreen
 		let hiddenMaterial = new THREE.MeshPhongMaterial();
 		hiddenMaterial.color = new THREE.Color("grey");
 		hiddenMaterial.opacity = 0.75;
-		hiddenMaterial.transparent = true;
+		hiddenMaterial.transparent = false;
 
 		// Set up the final instanced mesh and add to the scene
 		this.hiddenMesh = new THREE.InstancedMesh( hiddenInstancedGeometry, hiddenMaterial, this.count);
@@ -443,8 +443,10 @@ class MapScreen
 	DrawBlock(e)
 	{
 		// Store event variables for shortened code
-		let object = this.mapMesh;
+		let object = e.detail.object;
 		let instance = e.detail.instance;
+
+		console.log(object);
 
 		// Internal function to increment the height of selected blocks
 		let modifyHeight = function()
@@ -466,51 +468,25 @@ class MapScreen
 			// Reposition characters on the selected block
 			this.RepositionCharacter(matrix.elements[12], value, matrix.elements[14]);
 
-			// Set corresponding values in the transformation matrix for the instance
-			matrix.elements[5] = value;
-			matrix.elements[13] = value / 2;
-
-			// Set the transformation matrix to the instance and flag it for updates
-			object.setMatrixAt(instanceValue, matrix);
-			object.instanceMatrix.needsUpdate = true;
-
 		}.bind(this);
 
 		// Retrieve the transformation matrix for the clicked instance
 		let originalMatrix = new THREE.Matrix4();
 		object.getMatrixAt(instance, originalMatrix);
 
+		let matrix = new THREE.Matrix4();
+
 		// Iterate through the selected area, the size of the "brush"
 		for (let i = -Math.floor(this.brushSize / 2); i <= Math.floor(this.brushSize / 2); i++)
 		{
 			for (let j = -Math.floor(this.brushSize / 2); j <= Math.floor(this.brushSize / 2); j++)
 			{
-				// Calculate the instance ID based on an offset
-				var instanceValue = (instance + (i + (j * this.mapMatrix.mapXDimension)));
+				matrix.elements[12] = originalMatrix.elements[12] + i;
+				matrix.elements[14] = originalMatrix.elements[14] + j;
 
-				// Retrieve the transformation matrix for the clicked instance
-				var matrix = new THREE.Matrix4();
-				object.getMatrixAt(instanceValue, matrix);
-
-				// Ensure that the matrix is retrieved correctly
-				if (matrix.elements != null && (instanceValue > 0 && instanceValue < this.count))
+				if (matrix.elements[12] < 125 && matrix.elements[12] >= 0 && matrix.elements[14] < 125 && matrix.elements[14] >= 0) 
 				{
-					// If iterating to the left of the center block, X value should be less
-					if (i < 0) {
-						if (matrix.elements[14] < originalMatrix.elements[14]) {
-							modifyHeight();
-						}
-					}
-
-					// If iterating to the right of the center block, X value should be more
-					else if (i > 0) {
-						if (matrix.elements[14] > originalMatrix.elements[14]) {
-							modifyHeight();
-						}
-					}
-
-					// if in the center
-					else { modifyHeight(); }
+					modifyHeight();
 				}
 			}
 		}
@@ -524,7 +500,7 @@ class MapScreen
 	SelectBlock(e)
 	{
 		// Store event variables for shortened code
-		let object = this.mapMesh;
+		let object = e.detail.object;
 		let instance = e.detail.instance;
 
 		// Only select a block if an instance exists
@@ -793,13 +769,14 @@ class MapScreen
 	PickHoveredObject(e)
 	{
 		// Store event variables for shortened code
+		let object = e.detail.object;
 		let instance = e.detail.instance;
 
-		if (instance)
+		if (object.name != "Character")
 		{
 			// Retrieve the instance transformation matrix
 			let matrix = new THREE.Matrix4();
-			this.mapMesh.getMatrixAt(instance, matrix);
+			object.getMatrixAt(instance, matrix);
 
 			// Retrieve the height value from the map matrix
 			let value = this.mapMatrix.heightMap[matrix.elements[12]][matrix.elements[14]];
