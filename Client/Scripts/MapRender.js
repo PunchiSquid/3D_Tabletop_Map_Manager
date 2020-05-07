@@ -176,12 +176,8 @@ class MapScreen
 		this.hiddenMesh.instanceMatrix.setUsage( THREE.DynamicDrawUsage ); // will be updated every frame
 		this.scene.add(this.hiddenMesh);
 
-		// Set up the character cylinder geometry and material
+		// Set up the character cylinder geometry
 		var characterGeometry = new THREE.CylinderGeometry( 0.75, 0, 2, 8 );
-		let characterMaterial = new THREE.MeshPhongMaterial();
-		characterMaterial.color = new THREE.Color("red");
-		characterMaterial.opacity = 0.75;
-		characterMaterial.transparent = true;
 
 		// Iterate through the height map and move instances to fill the generated map
 		const matrix = new THREE.Matrix4();
@@ -232,6 +228,13 @@ class MapScreen
 				// If a character is present on a space, add a character token to that space in the render
 				if (this.mapMatrix.GetCharacter(i, j) != null)
 				{
+					// Set up individual materials for each character token
+					const characterMaterial = new THREE.MeshPhongMaterial();
+					characterMaterial.color = new THREE.Color("red");
+					characterMaterial.opacity = 0.75;
+					characterMaterial.transparent = true;
+					
+					// Create the mesh and set the position
 					let characterMesh = new THREE.Mesh( characterGeometry, characterMaterial);
 					characterMesh.position.set(i, value + 1.25, j);
 					characterMesh.name = "Character";
@@ -654,10 +657,8 @@ class MapScreen
 
 		// Store the character temporarily
 		this.pickedUpCharacter = this.mapMatrix.GetCharacter(object.position.x, object.position.z);
-
-		// Set the character matrix in the corresponding position to null and remove the rendered object
-		this.mapMatrix.SetCharacter(object.position.x, object.position.z, null);
-		this.scene.remove(object);
+		this.pickedUpObject = this.RetrieveCharacterObject(object.position.x, object.position.z);
+		this.pickedUpObject.material.color.set(new THREE.Color("grey"));
 	}
 
 	/*
@@ -723,8 +724,12 @@ class MapScreen
 				if (this.pickedUpCharacter)
 				{
 					// Set picked up character in the map
+					this.mapMatrix.SetCharacter(this.pickedUpObject.position.x, this.pickedUpObject.position.z, null);
 					this.mapMatrix.SetCharacter(locationMatrix.x, locationMatrix.z, this.pickedUpCharacter);
+					this.scene.remove(this.pickedUpObject);
+
 					this.pickedUpCharacter = null;
+					this.pickedUpObject = null;
 				}
 				else
 				{
@@ -799,8 +804,24 @@ class MapScreen
 			// Retrieve the height value from the map matrix
 			let value = this.mapMatrix.heightMap[matrix.elements[12]][matrix.elements[14]];
 
+			let hoverBoxGeometry;
+
 			// Set the dimensions of the cube
-			let hoverBoxGeometry = new THREE.BoxGeometry(this.brushSize + 0.25, value + 0.25, this.brushSize + 0.25);
+			if (this.activeSelectType == SelectTypes.ADD || this.activeSelectType == SelectTypes.REMOVE)
+			{
+				hoverBoxGeometry = new THREE.BoxGeometry(this.brushSize + 0.25, value + 0.25, this.brushSize + 0.25);
+			}
+			else
+			{
+				if (this.sessionType == SessionTypes.CLIENT)
+				{
+					hoverBoxGeometry = new THREE.BoxGeometry(1.25, matrix.elements[5] +  0.25, 1.25);
+				}
+				else
+				{
+					hoverBoxGeometry = new THREE.BoxGeometry(1.25, value + 0.25, 1.25);
+				}
+			}
 
 			// Set a material for the hovering box
 			let hoverMaterial = new THREE.MeshPhongMaterial();
@@ -813,7 +834,7 @@ class MapScreen
 
 			if (this.sessionType == SessionTypes.CLIENT)
 			{
-				this.cursorMesh.position.set(matrix.elements[12], 0.5, matrix.elements[14]);
+				this.cursorMesh.position.set(matrix.elements[12], matrix.elements[5] / 2, matrix.elements[14]);
 			}
 			else
 			{
