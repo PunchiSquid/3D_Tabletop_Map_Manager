@@ -232,6 +232,15 @@ app.get("/test", function(request, response)
 /* API Routes */
 /**************/
 
+app.get("/logout", function(request, response)
+{
+	if (request.session)
+	{
+		request.session.destroy();
+		response.send(null);
+	}
+});
+
 app.get("/getUser", function(request, response)
 {
 	if (request.session.username)

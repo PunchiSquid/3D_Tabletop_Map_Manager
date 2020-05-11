@@ -4,6 +4,14 @@ $(document).ready(function()
 	PopulateMapList();
 });
 
+function LogOut()
+{
+	$.get("logout", function(data, status)
+    {
+		window.location.href = "/";
+	});
+}
+
 function PopulateMapList()
 {
     var modal = new ProcessModal();
