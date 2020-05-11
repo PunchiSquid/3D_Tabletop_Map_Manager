@@ -242,6 +242,15 @@
 	float: right;
 }
 
+.footer
+{
+	position: absolute;
+	color: white;
+	bottom: 0;
+	text-align: center;
+	width: 100%;
+}
+
 /* Modal Header */
 .my-modal-header 
 {
