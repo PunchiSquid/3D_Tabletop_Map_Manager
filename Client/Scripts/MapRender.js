@@ -607,7 +607,7 @@ class MapScreen
 		{
 			// Retrieve matrix data
 			let matrix = new THREE.Matrix4();
-			this.mapMesh.getMatrixAt(e.detail.instance, matrix);
+			e.detail.object.getMatrixAt(e.detail.instance, matrix);
 
 			this.mapMatrix.RemoveBlockFromHiddenRegion(matrix.elements[12], matrix.elements[14], this.SelectedRegion);
 
